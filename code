@@ -2,247 +2,334 @@ import pygame
 
 import os
 
+queue = []
+
+
 pygame.init()
-
-#initial blank screen
-screen = pygame.display.set_mode((0,0),pygame.FULLSCREEN)
-colour = (238,232,205)
-screen.fill(colour)
-
-#audio conversions
-os.chdir('OneDrive/Desktop/GeoPress/music')
-click_sound = pygame.mixer.Sound('click.wav')
-
-#bg music
-pygame.mixer_music.load('bg music.wav')
-pygame.mixer_music.play(-1)
+screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+muted = False
+secretUnlocked = False
 
 #image conversions
-os.chdir('..')
-os.chdir('images')
-
+os.chdir('OneDrive/Desktop/GeoPress/images')
 icon = pygame.image.load('icon.png')
-title = pygame.image.load('title.png')
-title = pygame.transform.scale_by(title,1.25)
-unmute = pygame.image.load('unmute.png')
+unmute = pygame.image.load('unmute.png').convert_alpha()
 unmute = pygame.transform.smoothscale(unmute,(70,70))
-mute = pygame.image.load('mute.png')
+mute = pygame.image.load('mute.png').convert_alpha()
 mute = pygame.transform.smoothscale(mute,(70,70))
-play_button = pygame.image.load('play button.png')
-play_button = pygame.transform.smoothscale(play_button,(2*play_button.get_width() // 3, 2*play_button.get_height() // 3))
-iplay_button = pygame.image.load('play button inverted.png')
-iplay_button = pygame.transform.smoothscale(iplay_button,(play_button.get_width(),play_button.get_height()))
-quit_button = pygame.image.load('quit button.png')
+quit_button = pygame.image.load('quit button.png').convert_alpha()
 quit_button = pygame.transform.scale(quit_button,(2*quit_button.get_width() // 3, 3*quit_button.get_height() // 5))
-iquit_button = pygame.image.load('quit button inverted.png')
+iquit_button = pygame.image.load('quit button inverted.png').convert_alpha()
 iquit_button = pygame.transform.scale(iquit_button,(quit_button.get_width(),quit_button.get_height()))
+secretmsg = pygame.image.load('cheat_activated.png').convert_alpha()
+secretmsg = pygame.transform.scale(secretmsg,(500,200))
 
-#adding to screen
-screen.blit(title,(screen.get_width() // 2 - title.get_width() // 2, screen.get_height() // 4))
-pygame.display.flip()
-
-#initial menu conditions
-pygame.display.set_icon(icon)
-pygame.display.set_caption("GeoPress")
-mainLoop = True
-volume = unmute
-play = play_button
-quit = quit_button
-
-#conditionals
-muted = False
-
-#coordinates
-volume_lowX = screen.get_width() - screen.get_width() // 16
-volume_lowY = screen.get_height() // 32
-play_lowX = screen.get_width() // 2 - play_button.get_width() // 2
-play_lowY = screen.get_height() // 2
-quit_lowX = screen.get_width() // 2 - quit_button.get_width() // 2
-quit_lowY = screen.get_height() // 2 + 5*play_button.get_height() // 4
-
-#main menu loop
-while mainLoop:
-
-    #initialising buttons
-    screen.fill(colour,(screen.get_width() // 2 - play_button.get_width() // 2,screen.get_height() // 2, play.get_width() ,screen.get_height() // 2 + 5*play_button.get_height() // 4 + quit.get_height() - screen.get_height() // 2))
-    screen.blit(play,(screen.get_width() // 2 - play_button.get_width() // 2,screen.get_height() // 2))
-    screen.blit(quit,(screen.get_width() // 2 - quit_button.get_width() // 2,screen.get_height() // 2 + 5*play_button.get_height() // 4))
-    screen.fill(colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
-    screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
-    pygame.display.flip()
-
-    for event in pygame.event.get():
-        mouse = pygame.mouse.get_pos()
-
-        #close condition
-        if(event.type == pygame.QUIT):
-            pygame.quit()
-
-        #hovering over volume button
-        if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
-            if(event.type == pygame.MOUSEBUTTONDOWN):
-                pygame.mixer.Sound.play(click_sound)
-                if(not muted):
-                    muted = True
-                    pygame.mixer_music.pause()
-                    volume = mute
-                elif(muted):
-                    muted = False
-                    pygame.mixer_music.unpause()
-                    volume = unmute
-
-        #hovering over play button
-        if(play_lowX <= mouse[0] <= play_lowX + play.get_width() and play_lowY <= mouse[1] <= play_lowY + play.get_height()):
-            play = iplay_button
-            if(event.type == pygame.MOUSEBUTTONDOWN):
-                pygame.mixer.Sound.play(click_sound)
-                pygame.mixer_music.unload()
-                mainLoop = False
-                del title
-                del play_button
-                del iplay_button
-        else:
-            play = play_button
-        
-        #hovering over quit button
-        if(quit_lowX <= mouse[0] <= quit_lowX + quit.get_width() and quit_lowY <= mouse[1] <= quit_lowY + quit.get_height()):
-            quit = iquit_button
-            if(event.type == pygame.MOUSEBUTTONDOWN):
-                pygame.quit()
-        else:
-            quit = quit_button
-
-#initial game conditions
-screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
-colour = (255,255,255)
-rectangle_colour = (61,89,171)
-screen.fill(colour)
-
-#sounds
-os.chdir('..')
-os.chdir('music')
-pygame.mixer_music.load('game bg music.wav')
-shapeSwitch = pygame.mixer.Sound('shape switch.wav')
-
-#pause buttons
-os.chdir('..')
-os.chdir('images')
-title = pygame.image.load('paused.png')
-title = pygame.transform.scale_by(title,1.5)
-
-#images
 os.chdir('shapes')
-rectangle = pygame.image.load('rectangle.png')
+rectangle = pygame.image.load('rectangle.png').convert()
 rectangle = pygame.transform.smoothscale(rectangle,(300,150))
-triangle = pygame.image.load('triangle.png')
+triangle = pygame.image.load('triangle.png').convert_alpha()
 triangle = pygame.transform.smoothscale(triangle,(200,200))
-circle = pygame.image.load('circle.png')
+circle = pygame.image.load('circle.png').convert_alpha()
 circle = pygame.transform.smoothscale(circle,(200,200))
+secret = pygame.image.load('secret.png').convert_alpha()
+secret = pygame.transform.smoothscale(secret,(200,200))
+os.chdir('..')
 
-#initial conditionals
-gameLoop = True
-currentQuit = pygame.transform.scale_by(quit_button,1.5)
-screen.blit(rectangle,(mouse[0],mouse[1]))
 shapes = [rectangle,triangle,circle]
 rotatedLeftShapes = [pygame.transform.rotate(rectangle,90),pygame.transform.rotate(triangle,90),pygame.transform.rotate(circle,90)]
 rotatedRightShapes = [pygame.transform.rotate(rectangle,-90),pygame.transform.rotate(triangle,-90),pygame.transform.rotate(circle,-90)]
 upsideDownShapes = [pygame.transform.rotate(rectangle,180),pygame.transform.rotate(triangle,180),pygame.transform.rotate(circle,180)]
-currentShapePosition = 0
-currentShape = shapes[currentShapePosition]
-keysPressed = [False,False,False]
-keyUp = True
 
-#music
-pygame.mixer_music.play(-1)
-if(muted):
-    pygame.mixer_music.pause()
+pause_title = pygame.image.load('paused.png').convert_alpha()
+pause_title = pygame.transform.scale_by(pause_title,1.5)
+back_button = pygame.image.load('back.png').convert_alpha()
+back_button = pygame.transform.smoothscale(back_button,(70,70))
 
-pygame.display.flip()
+play_button = pygame.image.load('play button.png').convert_alpha()
+play_button = pygame.transform.smoothscale(play_button,(2*play_button.get_width() // 3, 2*play_button.get_height() // 3))
+iplay_button = pygame.image.load('play button inverted.png').convert_alpha()
+iplay_button = pygame.transform.smoothscale(iplay_button,(play_button.get_width(),play_button.get_height()))
+title = pygame.image.load('title.png').convert_alpha()
+title = pygame.transform.scale_by(title,1.25)
 
-#main game loop
-while gameLoop:
-    
-    if(muted):
-        pygame.mixer_music.pause()
-    if(not muted):
-        pygame.mixer_music.unpause()
+volume_lowX = screen.get_width() - screen.get_width() // 16
+volume_lowY = screen.get_height() // 32
+volume = unmute
+colour = (238,232,205)
+pygame.display.set_icon(icon)
+pygame.display.set_caption("GeoPress")
 
-    mouse = pygame.mouse.get_pos()
-    screen.fill(colour)
-    screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
-    pygame.display.flip()
 
-    for event in pygame.event.get():  
-        if(event.type == pygame.KEYDOWN):
-            if(event.key == pygame.K_d):
-                keysPressed = [True,False,False]
-                keyUp = False   
+#audio conversions
+os.chdir('..')
+os.chdir('music')
+click_sound = pygame.mixer.Sound('click.wav')
 
-            if(event.key == pygame.K_a):
-                keysPressed = [False,True,False]  
-                keyUp = False                 
+# ------------------------------------------- PAUSE MENU -------------------------------------------------#
+class PauseMenu:
+    def pause_menu():
 
-            if(event.key == pygame.K_w):
-                keysPressed = [False,False,True]
-                keyUp = False           
-
-            #shape switch
-            if(event.key == pygame.K_SPACE):
-                currentShapePosition = (currentShapePosition + 1) % 3
-                pygame.mixer.Sound.play(shapeSwitch)
-    
-            #pause menu
-            if(event.key == pygame.K_ESCAPE):
-                pygame.mixer.Sound.play(click_sound)
-                paused = True
-                pygame.mixer_music.pause()
-                while paused:
-                    paused_colour = (193,205,205)
-                    screen.fill(paused_colour)
-                    screen.fill(paused_colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
-                    screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
-                    screen.blit(title,(screen.get_width() // 2 - title.get_width() // 2, screen.get_height() // 4 - title.get_height() // 2))
-                    screen.blit(currentQuit,(screen.get_width() // 2 - currentQuit.get_width() // 2, screen.get_height() // 2 - currentQuit.get_height() // 2))
-                    pygame.display.flip()
-                    mouse = pygame.mouse.get_pos()
-                    for event in pygame.event.get():
-
-                        if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
-                            if(event.type == pygame.MOUSEBUTTONDOWN):
-                                pygame.mixer.Sound.play(click_sound)
-                                if(not muted):
-                                    muted = True
-                                    volume = mute
-                                elif(muted):
-                                    muted = False
-                                    volume = unmute
-
-                        if(event.type == pygame.KEYDOWN):
-                            if(event.key == pygame.K_ESCAPE):
-                                paused = False
-                                pygame.mixer_music.unpause()
-
-                        if((screen.get_width() // 2 - currentQuit.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and (screen.get_height() // 2 - currentQuit.get_height() // 2) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
-                            currentQuit = pygame.transform.scale_by(iquit_button,1.5)
-                            if(event.type == pygame.MOUSEBUTTONDOWN):
-                                pygame.quit()
-                        else:
-                            currentQuit = pygame.transform.scale_by(quit_button,1.5)
-
-        elif(event.type == pygame.KEYUP):
-            keysPressed == [False,False,False]
-            keyUp = True
+        #pause buttons
+        global pause_title
+        global back_button
         
-        if(event.type == pygame.QUIT):
-            pygame.quit()
-    
-    if(keysPressed[0]):
-        currentShape = rotatedLeftShapes[currentShapePosition]
-    if(keysPressed[1]):
-        currentShape = rotatedRightShapes[currentShapePosition]
-    if(keysPressed[2]):
-        currentShape = upsideDownShapes[currentShapePosition]
-    if(keyUp):
-        currentShape = shapes[currentShapePosition]
+        paused = True
+        cheatInput = ['-','-','-','-','-','-','-','-']
+        inputCount = 0
+        pygame.mixer_music.pause()
 
+        #initial conditions
+        currentQuit = pygame.transform.scale_by(quit_button,1.5)
+        printmsg = True
+
+        #coords
+        back_lowX = screen.get_width() // 64
+        back_lowY = screen.get_height() // 32
+
+        while paused:
+            global volume
+            global muted
+            global unmute
+            global mute
+            global volume_lowX
+            global volume_lowY
+            global secretUnlocked
+
+            cheatStringHalf = ''.join(cheatInput)
+            cheatString = cheatStringHalf + cheatStringHalf
+            if "bigbooty" in cheatString and printmsg:
+                pygame.mixer.Sound.play(click_sound)
+                secretUnlocked = True
+                printmsg = False
+            
+
+            paused_colour = (193,205,205)
+            screen.fill(paused_colour)
+            screen.fill(paused_colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
+            screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
+            screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
+            screen.blit(pause_title,(screen.get_width() // 2 - pause_title.get_width() // 2, screen.get_height() // 4 - pause_title.get_height() // 2))
+            screen.blit(currentQuit,(screen.get_width() // 2 - currentQuit.get_width() // 2, screen.get_height() // 2 - currentQuit.get_height() // 2))
+
+            if(secretUnlocked):
+                screen.blit(secretmsg,(screen.get_width() // 2 - secretmsg.get_width() // 2, 3*screen.get_height() // 5))
+
+            pygame.display.flip()
+            mouse = pygame.mouse.get_pos()
+            for event in pygame.event.get():
+
+                if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        pygame.mixer.Sound.play(click_sound)
+                        if(not muted):
+                            muted = True
+                            volume = mute
+                        elif(muted):
+                            muted = False
+                            volume = unmute
+                
+                if(back_lowX <= mouse[0] <= back_lowX + back_button.get_width() and back_lowY <= mouse[1] <= back_lowY + back_button.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        m1 = MainMenu
+                        queue.append(m1.main_menu())
+                        secretUnlocked = False
+                        pygame.mixer_music.unload()
+                        paused = False
+
+                if(event.type == pygame.KEYDOWN):
+                    if(event.key == pygame.K_ESCAPE):
+                        pygame.mixer_music.unpause()
+                        queue.append(GameScreen.game(mouse))
+                        paused = False
+
+                    else:
+                        cheatInput[inputCount] = event.unicode
+                        inputCount = (inputCount + 1) % 8
+
+                if((screen.get_width() // 2 - currentQuit.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and (screen.get_height() // 2 - currentQuit.get_height() // 2) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
+                    currentQuit = pygame.transform.scale_by(iquit_button,1.5)
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        pygame.quit()
+                else:
+                    currentQuit = pygame.transform.scale_by(quit_button,1.5)
+
+# ------------------------------------------- GAME SCREEN -------------------------------------------------#
+class GameScreen:
+
+    def game(mouse):
+
+        #sounds
+        pygame.mixer_music.load('game bg music.wav')
+        shapeSwitch = pygame.mixer.Sound('shape switch.wav')
+
+        #shape conversions
+        global rectangle
+        global triangle
+        global circle
+        global secret
+        global secretmsg
+        
+        #initial conditionals
+        global secretUnlocked
+        global muted
+        global shapes
+        global rotatedLeftShapes
+        global rotatedRightShapes
+        global upsideDownShapes
+        currentShapePosition = 0
+        currentShape = shapes[currentShapePosition]
+        printmsg = True
+        gameLoop = True
+
+        #music
+        pygame.mixer_music.play(-1)
+        if(muted):
+            pygame.mixer_music.pause()
+
+
+        #main game loop
+        while gameLoop:
+            mouse = pygame.mouse.get_pos()
+
+            #secret unlocked
+            if(secretUnlocked and printmsg):
+                currentShape = secret
+
+            
+            screen.fill(colour)      
+            screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
+            pygame.display.flip()
+
+            
+            for event in pygame.event.get():  
+                if(event.type == pygame.KEYDOWN):
+                    
+                    #shape switch
+                    if(event.key == pygame.K_SPACE and not secretUnlocked):
+                        currentShapePosition = (currentShapePosition + 1) % 3
+                        pygame.mixer.Sound.play(shapeSwitch)
+                    
+                    #shape rotaters
+                    if(event.key == pygame.K_d):
+                        currentShape = rotatedLeftShapes[currentShapePosition]        
+
+                    if(event.key == pygame.K_a):
+                        currentShape = rotatedRightShapes[currentShapePosition]                             
+
+                    if(event.key == pygame.K_w):
+                        currentShape = upsideDownShapes[currentShapePosition]
+
+                    #pause menu
+                    if(event.key == pygame.K_ESCAPE):
+                        pygame.mixer.Sound.play(click_sound)
+                        queue.append(PauseMenu.pause_menu())
+                        gameLoop = False
+
+                if(event.type == pygame.KEYUP):
+                    currentShape = shapes[currentShapePosition]
+                
+                if(event.type == pygame.QUIT):
+                    pygame.quit()
+            
+
+# ------------------------------------------- MAIN MENU -------------------------------------------------#
+class MainMenu():
+
+    global play_button
+    global iplay_button
+    global quit_button
+    global iquit_button
+    global muted
+    global volume
+
+    #coordinates
+    play_lowX = screen.get_width() // 2 - play_button.get_width() // 2
+    play_lowY = screen.get_height() // 2
+    quit_lowX = screen.get_width() // 2 - quit_button.get_width() // 2
+    quit_lowY = screen.get_height() // 2 + 5*play_button.get_height() // 4
+
+    def main_menu():
+
+        global secretUnlocked
+        secretUnlocked = False
+
+        #initial menu conditions
+        mainLoop = True
+        play = play_button
+        quit = quit_button
+
+        #bg music
+        pygame.mixer_music.load('bg music.wav')
+        pygame.mixer_music.play(-1)
+
+        #main menu loop
+        while mainLoop:
+
+            global volume
+            global volume_lowX
+            global volume_lowY
+            global muted
+            global title
+           
+            
+            #initialising buttons
+            screen.fill(colour)
+            screen.blit(title,(screen.get_width() // 2 - title.get_width() // 2, screen.get_height() // 4))
+            screen.blit(play,(screen.get_width() // 2 - play.get_width() // 2,screen.get_height() // 2))
+            screen.blit(quit,(screen.get_width() // 2 - quit.get_width() // 2,screen.get_height() // 2 + 5*play.get_height() // 4))
+            screen.fill(colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
+            screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                mouse = pygame.mouse.get_pos()
+
+                #close condition
+                if(event.type == pygame.QUIT):
+                    pygame.quit()
+
+                #hovering over volume button
+                if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        pygame.mixer.Sound.play(click_sound)
+                        if(not muted):
+                            muted = True
+                            pygame.mixer_music.pause()
+                            volume = mute
+                        elif(muted):
+                            muted = False
+                            pygame.mixer_music.unpause()
+                            volume = unmute
+
+                #hovering over play button
+                if(MainMenu.play_lowX <= mouse[0] <= MainMenu.play_lowX + play.get_width() and MainMenu.play_lowY <= mouse[1] <= MainMenu.play_lowY + play.get_height()):
+                    play = iplay_button
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        pygame.mixer.Sound.play(click_sound)
+                        pygame.mixer_music.unload()
+                        queue.append(GameScreen.game(mouse))
+                        mainLoop = False
+                        
+                    if(muted):
+                        pygame.mixer_music.pause()
+                        volume = mute
+
+                else:
+                    play = play_button
+                
+                #hovering over quit button
+                if(MainMenu.quit_lowX <= mouse[0] <= MainMenu.quit_lowX + quit.get_width() and MainMenu.quit_lowY <= mouse[1] <= MainMenu.quit_lowY + quit.get_height()):
+                    quit = iquit_button
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        pygame.quit()
+                else:
+                    quit = quit_button
+
+
+#adding main menu as starting screen
+queue.append(MainMenu.main_menu())
+
+#queue storing current game state
+while not queue:
+    queue.pop(0)
             
