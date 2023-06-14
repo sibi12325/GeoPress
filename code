@@ -86,6 +86,7 @@ class PauseMenu:
         back_lowX = screen.get_width() // 64
         back_lowY = screen.get_height() // 32
 
+        #main pause loop
         while paused:
             global volume
             global muted
@@ -95,6 +96,7 @@ class PauseMenu:
             global volume_lowY
             global secretUnlocked
 
+            #top secret
             cheatStringHalf = ''.join(cheatInput)
             cheatString = cheatStringHalf + cheatStringHalf
             if "bigbooty" in cheatString and printmsg:
@@ -102,7 +104,7 @@ class PauseMenu:
                 secretUnlocked = True
                 printmsg = False
             
-
+            #instantaneous screen
             paused_colour = (193,205,205)
             screen.fill(paused_colour)
             screen.fill(paused_colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
@@ -115,26 +117,31 @@ class PauseMenu:
                 screen.blit(secretmsg,(screen.get_width() // 2 - secretmsg.get_width() // 2, 3*screen.get_height() // 5))
 
             pygame.display.flip()
-            mouse = pygame.mouse.get_pos()
+
+            #input events
             for event in pygame.event.get():
 
+                #hovering over volume button
+                mouse = pygame.mouse.get_pos()
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        pygame.mixer.Sound.play(click_sound)
-                        if(not muted):
-                            muted = True
-                            volume = mute
-                        elif(muted):
-                            muted = False
-                            volume = unmute
+                        if(event.button == 1):
+                            pygame.mixer.Sound.play(click_sound)
+                            if(not muted):
+                                muted = True
+                                volume = mute
+                            elif(muted):
+                                muted = False
+                                volume = unmute
                 
                 if(back_lowX <= mouse[0] <= back_lowX + back_button.get_width() and back_lowY <= mouse[1] <= back_lowY + back_button.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        m1 = MainMenu
-                        queue.append(m1.main_menu())
-                        secretUnlocked = False
-                        pygame.mixer_music.unload()
-                        paused = False
+                        if(event.button == 1):
+                            m1 = MainMenu
+                            queue.append(m1.main_menu())
+                            secretUnlocked = False
+                            pygame.mixer_music.unload()
+                            paused = False
 
                 if(event.type == pygame.KEYDOWN):
                     if(event.key == pygame.K_ESCAPE):
@@ -149,7 +156,8 @@ class PauseMenu:
                 if((screen.get_width() // 2 - currentQuit.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and (screen.get_height() // 2 - currentQuit.get_height() // 2) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
                     currentQuit = pygame.transform.scale_by(iquit_button,1.5)
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        pygame.quit()
+                        if(event.button == 1):
+                            pygame.quit()
                 else:
                     currentQuit = pygame.transform.scale_by(quit_button,1.5)
 
@@ -291,24 +299,26 @@ class MainMenu():
                 #hovering over volume button
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        pygame.mixer.Sound.play(click_sound)
-                        if(not muted):
-                            muted = True
-                            pygame.mixer_music.pause()
-                            volume = mute
-                        elif(muted):
-                            muted = False
-                            pygame.mixer_music.unpause()
-                            volume = unmute
+                        if(event.button == 1):
+                            pygame.mixer.Sound.play(click_sound)
+                            if(not muted):
+                                muted = True
+                                pygame.mixer_music.pause()
+                                volume = mute
+                            elif(muted):
+                                muted = False
+                                pygame.mixer_music.unpause()
+                                volume = unmute
 
                 #hovering over play button
                 if(MainMenu.play_lowX <= mouse[0] <= MainMenu.play_lowX + play.get_width() and MainMenu.play_lowY <= mouse[1] <= MainMenu.play_lowY + play.get_height()):
                     play = iplay_button
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        pygame.mixer.Sound.play(click_sound)
-                        pygame.mixer_music.unload()
-                        queue.append(GameScreen.game(mouse))
-                        mainLoop = False
+                        if(event.button == 1):
+                            pygame.mixer.Sound.play(click_sound)
+                            pygame.mixer_music.unload()
+                            queue.append(GameScreen.game(mouse))
+                            mainLoop = False
                         
                     if(muted):
                         pygame.mixer_music.pause()
@@ -321,7 +331,8 @@ class MainMenu():
                 if(MainMenu.quit_lowX <= mouse[0] <= MainMenu.quit_lowX + quit.get_width() and MainMenu.quit_lowY <= mouse[1] <= MainMenu.quit_lowY + quit.get_height()):
                     quit = iquit_button
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        pygame.quit()
+                        if(event.button == 1):
+                            pygame.quit()
                 else:
                     quit = quit_button
 
