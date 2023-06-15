@@ -1,17 +1,30 @@
 import pygame
-
+import time
 import os
+import sys
+import threading
 
+#initializatiom
 queue = []
-
-
 pygame.init()
+
+#Loading screen
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+os.chdir('OneDrive/Desktop/GeoPress/images')
+loading_word = pygame.image.load('loading.png').convert_alpha()
+loaded = False
+screen.fill((250,250,250))
+screen.blit(loading_word,(screen.get_width() // 2 - loading_word.get_width() // 2, screen.get_height() // 2 - loading_word.get_height() // 2))
+pygame.display.flip()
+
+#initial universal conditions
 muted = False
 secretUnlocked = False
+rightWallReached = False
+rectangleanimation = (0,0,0,0)
+littleRectangle = (0,0,0,0)
 
 #image conversions
-os.chdir('OneDrive/Desktop/GeoPress/images')
 icon = pygame.image.load('icon.png')
 unmute = pygame.image.load('unmute.png').convert_alpha()
 unmute = pygame.transform.smoothscale(unmute,(70,70))
@@ -24,27 +37,43 @@ iquit_button = pygame.transform.scale(iquit_button,(quit_button.get_width(),quit
 secretmsg = pygame.image.load('cheat_activated.png').convert_alpha()
 secretmsg = pygame.transform.scale(secretmsg,(500,200))
 
+#shape character loading
 os.chdir('shapes')
 rectangle = pygame.image.load('rectangle.png').convert()
 rectangle = pygame.transform.smoothscale(rectangle,(300,150))
+rectangle1 = pygame.image.load('rectangle 1.png').convert()
+rectangle1 = pygame.transform.smoothscale(rectangle1,(300,150))
+rectangle2 = pygame.image.load('rectangle 2.png').convert()
+rectangle2 = pygame.transform.smoothscale(rectangle2,(300,150))
+rectangles = [rectangle,rectangle1,rectangle2]
 triangle = pygame.image.load('triangle.png').convert_alpha()
-triangle = pygame.transform.smoothscale(triangle,(200,200))
+triangle = pygame.transform.smoothscale(triangle,(250,250))
+triangle1 = pygame.image.load('triangle 1.png').convert_alpha()
+triangle1 = pygame.transform.smoothscale(triangle1,(250,250))
+triangle2 = pygame.image.load('triangle 2.png').convert_alpha()
+triangle2 = pygame.transform.smoothscale(triangle2,(250,250))
+triangles = [triangle,triangle1,triangle2]
 circle = pygame.image.load('circle.png').convert_alpha()
-circle = pygame.transform.smoothscale(circle,(200,200))
+circle = pygame.transform.smoothscale(circle,(250,250))
+circle1 = pygame.image.load('circle 1.png').convert_alpha()
+circle1 = pygame.transform.smoothscale(circle1,(250,250))
+circle2 = pygame.image.load('circle 2.png').convert_alpha()
+circle2 = pygame.transform.smoothscale(circle2,(250,250))
+circles = [circle,circle1,circle2]
 secret = pygame.image.load('secret.png').convert_alpha()
 secret = pygame.transform.smoothscale(secret,(200,200))
 os.chdir('..')
 
-shapes = [rectangle,triangle,circle]
-rotatedLeftShapes = [pygame.transform.rotate(rectangle,90),pygame.transform.rotate(triangle,90),pygame.transform.rotate(circle,90)]
-rotatedRightShapes = [pygame.transform.rotate(rectangle,-90),pygame.transform.rotate(triangle,-90),pygame.transform.rotate(circle,-90)]
-upsideDownShapes = [pygame.transform.rotate(rectangle,180),pygame.transform.rotate(triangle,180),pygame.transform.rotate(circle,180)]
+shapes = [rectangles,triangles,circles]
+rotatedLeftShapes = [[pygame.transform.rotate(rectangles[i], 90) for i in range(3)],[pygame.transform.rotate(triangles[i], 90) for i in range(3)],circles]
+rotatedRightShapes = [rotatedLeftShapes[0],[pygame.transform.rotate(triangles[i], -90) for i in range(3)],circles]
+upsideDownShapes = [rectangles,[pygame.transform.rotate(triangles[i], 180) for i in range(3)],circles]
 
+#more image conversions
 pause_title = pygame.image.load('paused.png').convert_alpha()
 pause_title = pygame.transform.scale_by(pause_title,1.5)
 back_button = pygame.image.load('back.png').convert_alpha()
 back_button = pygame.transform.smoothscale(back_button,(70,70))
-
 play_button = pygame.image.load('play button.png').convert_alpha()
 play_button = pygame.transform.smoothscale(play_button,(2*play_button.get_width() // 3, 2*play_button.get_height() // 3))
 iplay_button = pygame.image.load('play button inverted.png').convert_alpha()
@@ -52,6 +81,7 @@ iplay_button = pygame.transform.smoothscale(iplay_button,(play_button.get_width(
 title = pygame.image.load('title.png').convert_alpha()
 title = pygame.transform.scale_by(title,1.25)
 
+#more universal initialization
 volume_lowX = screen.get_width() - screen.get_width() // 16
 volume_lowY = screen.get_height() // 32
 volume = unmute
@@ -63,8 +93,60 @@ pygame.display.set_caption("GeoPress")
 #audio conversions
 os.chdir('..')
 os.chdir('music')
-click_sound = pygame.mixer.Sound('click.wav')
+click_sound = pygame.mixer.Sound('click.wav')    
 
+#-------------------------------------------------Press Animations----------------------------------------------------------#
+def press():
+    global rightWallReached, rectangleanimation,littleRectangle
+
+    # Animation Variables
+    animation_speed = 10
+    rectangle_width = 0
+    rectangle_height = screen.get_height()
+    rectangleanimation = (0,0,0,0)
+    littleRectangle = (0,0,0,0)
+
+    # Calculate the width of the rectangle that fills the screen
+    max_width = screen.get_width()
+
+    while not rightWallReached:
+        if(rectangle_width >= max_width):
+            rightWallReached = True
+
+        # Update the width of the rectangle
+        rectangle_width += animation_speed
+        
+        time.sleep(1/200)
+
+        #resize
+        rectangleanimation = (0, 0, rectangle_width, rectangle_height)
+        littleRectangle = (rectangle_width - rectangle.get_height() - 50, screen.get_height() // 2 - rectangle.get_width() // 2, rectangle.get_height() + 50, rectangle.get_width() + 50)
+
+        # Cap the width to the maximum width
+        if rectangle_width >= max_width:
+            rectangle_width = max_width
+            rightWallReached = True
+
+    time.sleep(0.5)
+
+    while rightWallReached:
+        if(rectangle_width <= 0):
+            rightWallReached = False
+
+        # Update the width of the rectangle
+        rectangle_width -= animation_speed
+        
+        time.sleep(1/200)
+
+        #resize
+        rectangleanimation = (0, 0, rectangle_width, rectangle_height)
+        littleRectangle = (rectangle_width - rectangle.get_height() - 50, screen.get_height() // 2 - rectangle.get_width() // 2, rectangle.get_height() + 50, rectangle.get_width() + 50)
+
+        # Cap the width to the maximum width
+        if rectangle_width <= 0:
+            rectangle_width = 0
+            rightWallReached = False
+    
 # ------------------------------------------- PAUSE MENU -------------------------------------------------#
 class PauseMenu:
     def pause_menu():
@@ -171,9 +253,9 @@ class GameScreen:
         shapeSwitch = pygame.mixer.Sound('shape switch.wav')
 
         #shape conversions
-        global rectangle
-        global triangle
-        global circle
+        global rectangles
+        global triangles
+        global circles
         global secret
         global secretmsg
         
@@ -184,10 +266,13 @@ class GameScreen:
         global rotatedLeftShapes
         global rotatedRightShapes
         global upsideDownShapes
+        
+        currentState = 0
         currentShapePosition = 0
-        currentShape = shapes[currentShapePosition]
+        currentShape = shapes[currentShapePosition][currentState]
         printmsg = True
         gameLoop = True
+        testPressed = False
 
         #music
         pygame.mixer_music.play(-1)
@@ -203,15 +288,25 @@ class GameScreen:
             if(secretUnlocked and printmsg):
                 currentShape = secret
 
-            
-            screen.fill(colour)      
-            screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
-            pygame.display.flip()
+            #instantaneous screen
+            screen.fill(colour)
 
-            
-            for event in pygame.event.get():  
+            if(testPressed):
+                animation = threading.Thread(target=press)
+                animation.start()
+                testPressed = False
+
+            pygame.draw.rect(screen,(0,0,0),rectangleanimation)
+            pygame.draw.rect(screen,colour,littleRectangle)
+                
+            screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
+
+            for event in pygame.event.get(): 
+
                 if(event.type == pygame.KEYDOWN):
-                    
+                    if(event.key == pygame.K_k):
+                        testPressed = True
+
                     #shape switch
                     if(event.key == pygame.K_SPACE and not secretUnlocked):
                         currentShapePosition = (currentShapePosition + 1) % 3
@@ -219,13 +314,16 @@ class GameScreen:
                     
                     #shape rotaters
                     if(event.key == pygame.K_d):
-                        currentShape = rotatedLeftShapes[currentShapePosition]        
+                        currentShape = rotatedLeftShapes[currentShapePosition]
+                        currentShape = currentShape[currentState]     
 
                     if(event.key == pygame.K_a):
-                        currentShape = rotatedRightShapes[currentShapePosition]                             
+                        currentShape = rotatedRightShapes[currentShapePosition] 
+                        currentShape = currentShape[currentState]                              
 
                     if(event.key == pygame.K_w):
                         currentShape = upsideDownShapes[currentShapePosition]
+                        currentShape = currentShape[currentState]  
 
                     #pause menu
                     if(event.key == pygame.K_ESCAPE):
@@ -235,9 +333,12 @@ class GameScreen:
 
                 if(event.type == pygame.KEYUP):
                     currentShape = shapes[currentShapePosition]
+                    currentShape = currentShape[currentState]  
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
+
+            pygame.display.flip()
             
 
 # ------------------------------------------- MAIN MENU -------------------------------------------------#
@@ -257,7 +358,6 @@ class MainMenu():
     quit_lowY = screen.get_height() // 2 + 5*play_button.get_height() // 4
 
     def main_menu():
-
         global secretUnlocked
         secretUnlocked = False
 
