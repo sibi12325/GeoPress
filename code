@@ -19,6 +19,7 @@ pygame.display.flip()
 
 #initial universal conditions
 muted = False
+currentState = 0
 secretUnlocked = False
 rightWallReached = False
 rectangleanimation = (0,0,0,0)
@@ -93,14 +94,19 @@ pygame.display.set_caption("GeoPress")
 #audio conversions
 os.chdir('..')
 os.chdir('music')
-click_sound = pygame.mixer.Sound('click.wav')    
+click_sound = pygame.mixer.Sound('click.wav')
+shut_sound = pygame.mixer.Sound('shut.wav')
+
+def stateChange():
+    global currentState
+    currentState = (currentState + 1) % 3
 
 #-------------------------------------------------Press Animations----------------------------------------------------------#
 def press():
     global rightWallReached, rectangleanimation,littleRectangle
 
     # Animation Variables
-    animation_speed = 10
+    animation_speed = 2
     rectangle_width = 0
     rectangle_height = screen.get_height()
     rectangleanimation = (0,0,0,0)
@@ -114,9 +120,9 @@ def press():
             rightWallReached = True
 
         # Update the width of the rectangle
-        rectangle_width += animation_speed
+        rectangle_width = 1.1*(rectangle_width +  0.5*animation_speed)
         
-        time.sleep(1/200)
+        time.sleep(1/100)
 
         #resize
         rectangleanimation = (0, 0, rectangle_width, rectangle_height)
@@ -127,15 +133,15 @@ def press():
             rectangle_width = max_width
             rightWallReached = True
 
-    time.sleep(0.5)
+    pygame.mixer.Sound.play(shut_sound)
+    time.sleep(0.05)
 
     while rightWallReached:
         if(rectangle_width <= 0):
             rightWallReached = False
 
         # Update the width of the rectangle
-        rectangle_width -= animation_speed
-        
+        rectangle_width = rectangle_width  - 4*animation_speed
         time.sleep(1/200)
 
         #resize
@@ -266,13 +272,14 @@ class GameScreen:
         global rotatedLeftShapes
         global rotatedRightShapes
         global upsideDownShapes
-        
-        currentState = 0
+        global currentState
+
         currentShapePosition = 0
         currentShape = shapes[currentShapePosition][currentState]
         printmsg = True
         gameLoop = True
         testPressed = False
+        stateChanged = False
 
         #music
         pygame.mixer_music.play(-1)
@@ -291,12 +298,20 @@ class GameScreen:
             #instantaneous screen
             screen.fill(colour)
 
+            if(rectangleanimation[2] + currentShape.get_width() // 2 >= mouse[0] and not stateChanged):
+                if(not (littleRectangle[0] + currentShape.get_width() // 2 < mouse[0] and littleRectangle[1] + currentShape.get_height() // 2 <= mouse[1] <= littleRectangle[3])):
+                    stateChanged = True
+
+            if(stateChanged):
+                stateChanged = False
+                stateChange()
+
             if(testPressed):
                 animation = threading.Thread(target=press)
                 animation.start()
                 testPressed = False
 
-            pygame.draw.rect(screen,(0,0,0),rectangleanimation)
+            pygame.draw.rect(screen,(40,43,43),rectangleanimation)
             pygame.draw.rect(screen,colour,littleRectangle)
                 
             screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
