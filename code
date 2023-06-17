@@ -2,6 +2,7 @@ import pygame
 import time
 import os
 import sys
+import random
 import threading
 
 #initializatiom
@@ -10,7 +11,7 @@ pygame.init()
 
 #Loading screen
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
-os.chdir('OneDrive/Desktop/GeoPress/images')
+os.chdir('OneDrive/Desktop/GeoPress/data/images')
 loading_word = pygame.image.load('loading.png').convert_alpha()
 loaded = False
 screen.fill((250,250,250))
@@ -21,9 +22,13 @@ pygame.display.flip()
 muted = False
 currentState = 0
 secretUnlocked = False
-rightWallReached = False
-rectangleanimation = (0,0,0,0)
-littleRectangle = (0,0,0,0)
+finished = False
+stateChanged = False
+rectangleanimation = pygame.Rect((0,0,0,0))
+littleRectangle = pygame.Rect((0,0,0,0))
+hint = pygame.Rect((0,0,0,0))
+gaming = False
+currentPress = 18
 
 #image conversions
 icon = pygame.image.load('icon.png')
@@ -33,8 +38,12 @@ mute = pygame.image.load('mute.png').convert_alpha()
 mute = pygame.transform.smoothscale(mute,(70,70))
 quit_button = pygame.image.load('quit button.png').convert_alpha()
 quit_button = pygame.transform.scale(quit_button,(2*quit_button.get_width() // 3, 3*quit_button.get_height() // 5))
+retry_button = pygame.image.load('retry button.png').convert_alpha()
+retry_button = pygame.transform.scale(retry_button,(quit_button.get_width(),quit_button.get_height()))
+iretry_button = pygame.image.load('retry button inverted.png').convert_alpha()
+iretry_button = pygame.transform.smoothscale(iretry_button,(retry_button.get_width(),retry_button.get_height()))
 iquit_button = pygame.image.load('quit button inverted.png').convert_alpha()
-iquit_button = pygame.transform.scale(iquit_button,(quit_button.get_width(),quit_button.get_height()))
+iquit_button = pygame.transform.smoothscale(iquit_button,(quit_button.get_width(),quit_button.get_height()))
 secretmsg = pygame.image.load('cheat_activated.png').convert_alpha()
 secretmsg = pygame.transform.scale(secretmsg,(500,200))
 
@@ -71,8 +80,12 @@ rotatedRightShapes = [rotatedLeftShapes[0],[pygame.transform.rotate(triangles[i]
 upsideDownShapes = [rectangles,[pygame.transform.rotate(triangles[i], 180) for i in range(3)],circles]
 
 #more image conversions
+game_over = pygame.image.load('game over.png').convert_alpha()
+game_over = pygame.transform.scale_by(game_over,1.5)
 pause_title = pygame.image.load('paused.png').convert_alpha()
 pause_title = pygame.transform.scale_by(pause_title,1.5)
+
+
 back_button = pygame.image.load('back.png').convert_alpha()
 back_button = pygame.transform.smoothscale(back_button,(70,70))
 play_button = pygame.image.load('play button.png').convert_alpha()
@@ -97,61 +110,246 @@ os.chdir('music')
 click_sound = pygame.mixer.Sound('click.wav')
 shut_sound = pygame.mixer.Sound('shut.wav')
 
-def stateChange():
-    global currentState
-    currentState = (currentState + 1) % 3
+#-----------------------------------------------attacks choosing------------------------------------------#
+def attacks():
+    global gaming
+    while gaming:
+        rectPress()
+        time.sleep(1)
 
 #-------------------------------------------------Press Animations----------------------------------------------------------#
-def press():
-    global rightWallReached, rectangleanimation,littleRectangle
+def rectPress():
+    
+    time.sleep(0.5)
+    initialTime = time.time()
+    global finished, rectangleanimation,littleRectangle,hint,stateChanged,currentPress
 
-    # Animation Variables
-    animation_speed = 2
-    rectangle_width = 0
-    rectangle_height = screen.get_height()
-    rectangleanimation = (0,0,0,0)
-    littleRectangle = (0,0,0,0)
+    sideChosen = random.randint(0,3)
+    sideChosen = 0
+    animation_speed = 0.05
+    velocity = 0.05
 
-    # Calculate the width of the rectangle that fills the screen
-    max_width = screen.get_width()
+    if(sideChosen == 0):
+        currentPress = 0
+        x = 0
+        y = 0
+        rectangle_width = 0
+        rectangle_height = screen.get_height()
+        max = screen.get_width()
+        littleHeight = random.randint(0,screen.get_height() - rectangle.get_width())
+        hint = (screen.get_width() - rectangle.get_height() - 50,littleHeight,rectangle.get_height() + 50,rectangle.get_width() + 50)
 
-    while not rightWallReached:
-        if(rectangle_width >= max_width):
-            rightWallReached = True
+    elif(sideChosen == 1):
+        currentPress = 1
+        x = 0
+        y = 0
+        rectangle_width = screen.get_width()
+        rectangle_height = 0
+        max = screen.get_height()
+        littleWidth = random.randint(0,screen.get_width() - rectangle.get_width())
+        hint = (littleWidth,screen.get_height() - rectangle.get_height() - 50,rectangle.get_width() + 50,rectangle.get_height() + 50)
+    
+    elif(sideChosen == 2):
+        currentPress = 2
+        x = screen.get_width()
+        y = 0
+        rectangle_width = screen.get_width() + 100
+        rectangle_height = screen.get_height()
+        max = 0
+        littleHeight = random.randint(0,screen.get_height() - rectangle.get_width())
+        hint = (0,littleHeight,rectangle.get_height() + 50,rectangle.get_width() + 50)
+    
+    elif(sideChosen == 3):
+        currentPress = 3
+        x = 0
+        y = screen.get_height()
+        rectangle_width = screen.get_width()
+        rectangle_height = screen.get_height() + 100
+        max = 0
+        littleWidth = random.randint(0,screen.get_width() - rectangle.get_width())
+        hint = (littleWidth,0,rectangle.get_width() + 50,rectangle.get_height() + 50)
 
-        # Update the width of the rectangle
-        rectangle_width = 1.1*(rectangle_width +  0.5*animation_speed)
+    while not finished:
+        if ((time.time() - initialTime) >= 1/(50*animation_speed)):
+            hint = (0,0,0,0)
+        if(rectangle_width >= max and sideChosen == 0):
+            finished = True
+        elif(rectangle_height >= max and sideChosen == 1):
+            finished = True
+        elif(x <= max and sideChosen == 2):
+            finished = True
+        elif(y <= max and sideChosen == 3):
+            finished = True
+
+        # Update the rectangle
+        if(sideChosen == 0):
+            rectangle_width = rectangle_width + velocity
+            velocity = 1.1*(velocity + 0.5*animation_speed)
+            littleWidth = rectangle_width - rectangle.get_height() - 50
+
+        elif(sideChosen == 1):
+            rectangle_height = rectangle_height + velocity
+            velocity = 1.1*(velocity + 0.5*animation_speed)
+            littleHeight = rectangle_height - rectangle.get_height() - 50
+        
+        elif(sideChosen == 2):
+            x = x - velocity
+            velocity = 1.1*(velocity + 0.5*animation_speed)
+            littleWidth = x
+
+        elif(sideChosen == 3):
+            y = y - velocity
+            velocity = 1.1*(velocity + 0.5*animation_speed)
+            littleHeight = y
         
         time.sleep(1/100)
 
         #resize
-        rectangleanimation = (0, 0, rectangle_width, rectangle_height)
-        littleRectangle = (rectangle_width - rectangle.get_height() - 50, screen.get_height() // 2 - rectangle.get_width() // 2, rectangle.get_height() + 50, rectangle.get_width() + 50)
+        rectangleanimation = pygame.Rect((x, y, rectangle_width, rectangle_height))
+        if(sideChosen == 0 or sideChosen == 2):
+            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_height() + 50, rectangle.get_width() + 50))
+        elif(sideChosen == 1 or sideChosen == 3):
+            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_width() + 50, rectangle.get_height() + 50))
+    
 
         # Cap the width to the maximum width
-        if rectangle_width >= max_width:
-            rectangle_width = max_width
-            rightWallReached = True
+        if(rectangle_width >= max and sideChosen == 0):
+            rectangle_width = max
+            finished = True
+        elif(rectangle_height >= max and sideChosen == 1):
+            rectangle_height = max
+            finished = True
+        elif(x <= max and sideChosen == 2):
+            x = max
+            finished = True
+        elif(y <= max and sideChosen == 3):
+            y = max
+            finished = True
 
     pygame.mixer.Sound.play(shut_sound)
     time.sleep(0.05)
 
-    while rightWallReached:
-        if(rectangle_width <= 0):
-            rightWallReached = False
+    while finished:
+        if(rectangle_width <= 0 and sideChosen == 0):
+            finished = False
+        elif(rectangle_height <= 0 and sideChosen == 1):
+            finished = False
+        elif(x >= screen.get_width() and sideChosen == 2):
+            finished = False
+        elif(y >= screen.get_height() and sideChosen == 3):
+            finished = False
 
         # Update the width of the rectangle
-        rectangle_width = rectangle_width  - 4*animation_speed
+        if(sideChosen == 0):
+            rectangle_width = rectangle_width  - 80*animation_speed
+            littleWidth = rectangle_width - rectangle.get_height() - 50
+
+        elif(sideChosen == 1):
+            rectangle_height = rectangle_height  - 80*animation_speed
+            littleHeight = rectangle_height - rectangle.get_height() - 50
+        
+        elif(sideChosen == 2):
+            x = x + 80*animation_speed
+            littleWidth = x
+        
+        elif(sideChosen == 3):
+            y = y + 80*animation_speed
+            littleHeight = y
+
         time.sleep(1/200)
 
         #resize
-        rectangleanimation = (0, 0, rectangle_width, rectangle_height)
-        littleRectangle = (rectangle_width - rectangle.get_height() - 50, screen.get_height() // 2 - rectangle.get_width() // 2, rectangle.get_height() + 50, rectangle.get_width() + 50)
+        rectangleanimation = pygame.Rect((x, y, rectangle_width, rectangle_height))
+        if(sideChosen == 0 or sideChosen == 2):
+            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_height() + 50, rectangle.get_width() + 50))
+        elif(sideChosen == 1 or sideChosen == 3):
+            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_width() + 50, rectangle.get_height() + 50))
 
         # Cap the width to the maximum width
-        if rectangle_width <= 0:
+        if(rectangle_width <= 0 and sideChosen == 0):
             rectangle_width = 0
-            rightWallReached = False
+            finished = False
+        elif(rectangle_height <= 0 and sideChosen == 1):
+            rectangle_height = 0
+            finished = False
+        elif(x >= screen.get_width() and sideChosen == 2):
+            x = screen.get_width()
+            finished = False
+        elif(y >= screen.get_height() and sideChosen == 3):
+            y = screen.get_width()
+            finished = False
+    
+    rectangleanimation = pygame.Rect((0,0,0,0))
+    littleRectangle = pygame.Rect((0,0,0,0))
+    stateChanged = False
+
+#-------------------------------------------LOSE SCREEN---------------------------------------------------#
+class LoseScreen:
+    def lose_screen():
+
+        #pause buttons
+        global game_over
+        global back_button, retry_button, iretry_button
+        global secretUnlocked,quit_button,iquit_button
+        onLost = True
+        pygame.mixer_music.pause()
+
+        #initial conditions
+        currentQuit = pygame.transform.scale_by(quit_button,1.5)
+        currentRetry = pygame.transform.scale_by(retry_button,1.5)
+
+        #coords
+        back_lowX = screen.get_width() // 64
+        back_lowY = screen.get_height() // 32
+        quit_lowX = screen.get_width() // 2 - currentQuit.get_width() // 2
+        quit_lowY = screen.get_height() // 2 - currentQuit.get_height() // 2
+        retry_lowY = screen.get_height() // 2 + currentQuit.get_height() // 2
+
+        #main pause loop
+        while onLost:
+
+            #instantaneous screen
+            paused_colour = (193,205,205)
+            screen.fill(paused_colour)
+            screen.fill(paused_colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
+            screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
+            screen.blit(game_over,(screen.get_width() // 2 - game_over.get_width() // 2, screen.get_height() // 4 - game_over.get_height() // 2))
+            screen.blit(currentQuit,(quit_lowX, quit_lowY))
+            screen.blit(currentRetry,(quit_lowX, retry_lowY))
+
+            pygame.display.flip()
+
+            #input events
+            for event in pygame.event.get():
+                pygame.mouse.set_visible(True)
+                mouse = pygame.mouse.get_pos()
+   
+                if(back_lowX <= mouse[0] <= back_lowX + back_button.get_width() and back_lowY <= mouse[1] <= back_lowY + back_button.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            m1 = MainMenu
+                            queue.append(m1.main_menu())
+                            secretUnlocked = False
+                            pygame.mixer_music.unload()
+                            onLost = False
+
+                if(quit_lowX <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and (quit_lowY) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
+                    currentQuit = pygame.transform.scale_by(iquit_button,1.5)
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            pygame.quit()
+                else:
+                    currentQuit = pygame.transform.scale_by(quit_button,1.5)
+                
+                if(quit_lowX <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and retry_lowY <= mouse[1] <= retry_lowY + currentRetry.get_height()):
+                    currentRetry = pygame.transform.scale_by(iretry_button,1.5)
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            onLost = False
+                            queue.append(GameScreen.game(mouse))
+                else:
+                    currentRetry = pygame.transform.scale_by(retry_button,1.5)
+
     
 # ------------------------------------------- PAUSE MENU -------------------------------------------------#
 class PauseMenu:
@@ -208,9 +406,10 @@ class PauseMenu:
 
             #input events
             for event in pygame.event.get():
+                pygame.mouse.set_visible(True)
+                mouse = pygame.mouse.get_pos()
 
                 #hovering over volume button
-                mouse = pygame.mouse.get_pos()
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
@@ -254,9 +453,12 @@ class GameScreen:
 
     def game(mouse):
 
+        pygame.mouse.set_visible(False)
+
         #sounds
         pygame.mixer_music.load('game bg music.wav')
         shapeSwitch = pygame.mixer.Sound('shape switch.wav')
+        breakSound = pygame.mixer.Sound('break.wav')
 
         #shape conversions
         global rectangles
@@ -264,6 +466,8 @@ class GameScreen:
         global circles
         global secret
         global secretmsg
+        global gaming
+        global currentPress
         
         #initial conditionals
         global secretUnlocked
@@ -273,13 +477,17 @@ class GameScreen:
         global rotatedRightShapes
         global upsideDownShapes
         global currentState
+        global stateChanged
 
         currentShapePosition = 0
         currentShape = shapes[currentShapePosition][currentState]
         printmsg = True
         gameLoop = True
-        testPressed = False
-        stateChanged = False
+        gaming = True
+        crush = threading.Thread(target=attacks)
+        crush.start()
+        x,y = mouse
+        shap = pygame.Rect((0,0,0,0))
 
         #music
         pygame.mixer_music.play(-1)
@@ -289,7 +497,6 @@ class GameScreen:
 
         #main game loop
         while gameLoop:
-            mouse = pygame.mouse.get_pos()
 
             #secret unlocked
             if(secretUnlocked and printmsg):
@@ -298,29 +505,42 @@ class GameScreen:
             #instantaneous screen
             screen.fill(colour)
 
-            if(rectangleanimation[2] + currentShape.get_width() // 2 >= mouse[0] and not stateChanged):
-                if(not (littleRectangle[0] + currentShape.get_width() // 2 < mouse[0] and littleRectangle[1] + currentShape.get_height() // 2 <= mouse[1] <= littleRectangle[3])):
-                    stateChanged = True
-
-            if(stateChanged):
-                stateChanged = False
-                stateChange()
-
-            if(testPressed):
-                animation = threading.Thread(target=press)
-                animation.start()
-                testPressed = False
-
             pygame.draw.rect(screen,(40,43,43),rectangleanimation)
             pygame.draw.rect(screen,colour,littleRectangle)
-                
-            screen.blit(currentShape,(mouse[0] - currentShape.get_width() // 2,mouse[1] - currentShape.get_height() // 2))
+            pygame.draw.rect(screen,(200,194,167),hint)
+            
+            if (x > (screen.get_width() - currentShape.get_width() // 2)):
+                x = screen.get_width() - currentShape.get_width() // 2
+            if(x < (currentShape.get_width() // 2)):
+                x = currentShape.get_width() // 2
+            if(y > (screen.get_height() - currentShape.get_height() // 2)):
+                y = screen.get_height() - currentShape.get_height() // 2
+            if(y < currentShape.get_height() // 2):
+                y = currentShape.get_height() // 2
+
+            if(shap.colliderect(rectangleanimation) and not stateChanged and not secretUnlocked):
+                if(littleRectangle[0] + littleRectangle[2] > x > littleRectangle[0] and littleRectangle[1] + littleRectangle[3] > y > littleRectangle[1]):
+                    pygame.mixer.Sound.play(breakSound)
+                    currentState = currentState + 1
+                    stateChanged = True
+                    if(currentState == 3):
+                        currentState = 0
+                        gaming = False
+
+                        crush.join()
+                        queue.append(LoseScreen.lose_screen())
+                        
+                        gameLoop = False
+                    currentShape = shapes[currentShapePosition]
+                    currentShape = currentShape[currentState] 
+
+            screen.blit(currentShape,(x - currentShape.get_width() // 2,y - currentShape.get_height() // 2))
 
             for event in pygame.event.get(): 
 
+                mouse2 = pygame.mouse.get_pos()
+                
                 if(event.type == pygame.KEYDOWN):
-                    if(event.key == pygame.K_k):
-                        testPressed = True
 
                     #shape switch
                     if(event.key == pygame.K_SPACE and not secretUnlocked):
@@ -342,9 +562,11 @@ class GameScreen:
 
                     #pause menu
                     if(event.key == pygame.K_ESCAPE):
+                        gaming = False
                         pygame.mixer.Sound.play(click_sound)
                         queue.append(PauseMenu.pause_menu())
                         gameLoop = False
+                        
 
                 if(event.type == pygame.KEYUP):
                     currentShape = shapes[currentShapePosition]
@@ -352,6 +574,9 @@ class GameScreen:
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
+
+                x,y = mouse2
+                shap = currentShape.get_rect()
 
             pygame.display.flip()
             
@@ -373,8 +598,14 @@ class MainMenu():
     quit_lowY = screen.get_height() // 2 + 5*play_button.get_height() // 4
 
     def main_menu():
+
+        global currentState,stateChanged
+        
         global secretUnlocked
         secretUnlocked = False
+
+        currentState = 0
+        stateChanged = False
 
         #initial menu conditions
         mainLoop = True
@@ -406,6 +637,7 @@ class MainMenu():
 
             for event in pygame.event.get():
                 mouse = pygame.mouse.get_pos()
+                pygame.mouse.set_visible(True)
 
                 #close condition
                 if(event.type == pygame.QUIT):
@@ -453,7 +685,7 @@ class MainMenu():
 
 
 #adding main menu as starting screen
-queue.append(MainMenu.main_menu())
+queue.append(LoseScreen.lose_screen())
 
 #queue storing current game state
 while not queue:
