@@ -123,18 +123,18 @@ def attacks():
     global gaming,fps
     while gaming:
         chosen = random.randint(0,1)
-        chosen = 0
         if(chosen == 0):
             circlePress(velocity)
         if(chosen == 1):
             rectPress(velocity)
         velocity = velocity + 0.005
-        time.sleep(1)
 
 #-------------------------------------------------Press Animations----------------------------------------------------------#
 def circlePress(velocity):
+
+    time.sleep(1/(10+velocity))
     
-    global circleanimation,circle,circleHint,score,fps,circleLocation,stateChanged,circlePressing,circReached
+    global circleanimation,circle,circleHint,score,fps,circleLocation,stateChanged,circlePressing,circReached,gaming
     circlePressing = True
     looney = pygame.mixer.Sound('looney.wav')
     
@@ -152,7 +152,7 @@ def circlePress(velocity):
 
     time.sleep(1/(400*velocity))
 
-    while not finished:
+    while not finished and gaming:
 
         if(time.time() - initTime >= 1/(2*velocity)):
             circleHint = 0
@@ -177,7 +177,7 @@ def circlePress(velocity):
     score += 1
     circReached = False
 
-    while finished:
+    while finished and gaming:
 
         if radius >= screen.get_width() + 100:
             radius = screen.get_width() + 100
@@ -197,9 +197,11 @@ def circlePress(velocity):
 #rect press [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
 def rectPress(velocity):
 
+    time.sleep(1/(10+velocity))
+
     initVelocity = velocity
     initialTime = time.time()
-    global rectangleanimation,littleRectangle1,littleRectangle2,hint,stateChanged, score,circleanimation,rectReached
+    global rectangleanimation,littleRectangle1,littleRectangle2,hint,stateChanged, score,circleanimation,rectReached,gaming
     finished = False
     sideChosen = random.randint(0,3)
     animation_speed = 0.005
@@ -242,7 +244,7 @@ def rectPress(velocity):
 
     time.sleep(1/(400*velocity))
 
-    while not finished:
+    while not finished and gaming:
         if ((time.time() - initialTime) >= 1/(2*velocity)):
             hint = (0,0,0,0)
 
@@ -306,7 +308,7 @@ def rectPress(velocity):
     score += 1
     rectReached = False
 
-    while finished:
+    while finished and gaming:
 
         # Update the width of the rectangle
         if(sideChosen == 0):
@@ -364,12 +366,12 @@ class LoseScreen:
         new_high = False
         font = pygame.font.SysFont('Ariel',70)
         highFont = pygame.font.SysFont('Times New Roman',50)
-        scoreDisplay = font.render('Score: ' + str(score),1,(0,0,0))
+        scoreDisplay = font.render('Score: ' + str(score - 1),1,(0,0,0))
         os.chdir('..')
         currentHighScore = open('data.txt','r')
         currentHighScore = currentHighScore.read()
-        if score > int(currentHighScore):
-            currentHighScore = score
+        if (score - 1) > int(currentHighScore):
+            currentHighScore = score - 1
             new_high = True
             open('data.txt','w').write(str(currentHighScore))
         os.chdir('music')
@@ -681,6 +683,7 @@ class GameScreen:
                     #pause menu
                     if(event.key == pygame.K_ESCAPE):
                         gaming = False
+                        crush.join()
                         pygame.mixer.Sound.play(click_sound)
                         queue.append(PauseMenu.pause_menu())
                         gameLoop = False
