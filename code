@@ -22,20 +22,20 @@ pygame.display.flip()
 muted = False
 currentState = 0
 secretUnlocked = False
-finished = False
 stateChanged = False
 gaming = False
-currentPress = 18
-rectangleanimation = pygame.Rect((0,0,1,1))
-littleRectangle = pygame.Rect((0,0,1,1))
+rectangleanimation = pygame.Rect((0,0,0,0))
+littleRectangle1 = pygame.Rect((0,0,0,0))
+littleRectangle2 = pygame.Rect((0,0,0,0))
 circleanimation = 0
-circleLocation = (0,0)
-hint = pygame.Rect((0,0,1,1))
+circleLocation = (-1000,-1000)
+hint = pygame.Rect((0,0,0,0))
 circleHint = 0
 clock = pygame.time.Clock()
 fps = 400
-rectPressing = True
 circlePressing = False
+rectReached = False
+circReached = False
 
 #image conversions
 icon = pygame.image.load('icon.png')
@@ -120,17 +120,13 @@ shut_sound = pygame.mixer.Sound('shut.wav')
 #-----------------------------------------------attacks choosing----------------------------------------------------------#
 def attacks():
     velocity = 0.005
-    global gaming,fps,circlePressing,rectPressing
+    global gaming,fps
     while gaming:
         chosen = random.randint(0,1)
-        chosen = 1
+        chosen = 0
         if(chosen == 0):
-            circlePressing = True
-            rectPressing = False
             circlePress(velocity)
         if(chosen == 1):
-            circlePressing = False
-            rectPressing = True
             rectPress(velocity)
         velocity = velocity + 0.005
         time.sleep(1)
@@ -138,7 +134,8 @@ def attacks():
 #-------------------------------------------------Press Animations----------------------------------------------------------#
 def circlePress(velocity):
     
-    global circleanimation,circle,circleHint,score,fps,rectangleanimation,circleLocation,stateChanged
+    global circleanimation,circle,circleHint,score,fps,circleLocation,stateChanged,circlePressing,circReached
+    circlePressing = True
     looney = pygame.mixer.Sound('looney.wav')
     
     initTime = time.time()
@@ -149,9 +146,8 @@ def circlePress(velocity):
     yLocation = random.randint(circle.get_height() // 2,screen.get_height() - circle.get_height() // 2)
     circleLocation = (xLocation,yLocation)
     radius = screen.get_width()
-    rectangleanimation = (0,0,0,0)
     circleanimation = screen.get_width() + 100
-    circleHint = circle.get_width() // 2 + 20
+    circleHint = circle.get_width() // 2 + 30
     finished = False
 
     time.sleep(1/(400*velocity))
@@ -164,8 +160,8 @@ def circlePress(velocity):
         radius = radius - 10*velocity
         velocity = 1.01*(velocity + animation_speed)
 
-        if radius <= ((circle.get_width() / 2 + 20)):
-            radius = (circle.get_width() / 2 + 20)
+        if radius <= ((circle.get_width() / 2 + 30)):
+            radius = (circle.get_width() / 2 + 30)
             finished = True
 
 
@@ -175,9 +171,11 @@ def circlePress(velocity):
 
         clock.tick(fps)
 
+    circReached = True
     pygame.mixer.Sound.play(looney)
     time.sleep(0.05)
     score += 1
+    circReached = False
 
     while finished:
 
@@ -191,56 +189,54 @@ def circlePress(velocity):
         circleanimation = radius
 
         clock.tick(fps)
+    circleanimation = 0
+    circleLocation = (-1000,-1000)
+    circlePressing = False
     stateChanged = False
 
-
+#rect press [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
 def rectPress(velocity):
 
+    initVelocity = velocity
     initialTime = time.time()
-    global finished, rectangleanimation,littleRectangle,hint,stateChanged,currentPress, score,circleanimation
-    rectangleanimation = (0,0,0,0)
-    circleanimation = 0
-
+    global rectangleanimation,littleRectangle1,littleRectangle2,hint,stateChanged, score,circleanimation,rectReached
+    finished = False
     sideChosen = random.randint(0,3)
     animation_speed = 0.005
 
     if(sideChosen == 0):
-        currentPress = 0
         x = 0
         y = 0
-        rectangle_width = 0
+        rectangle_width = - rectangle.get_height() - 50
         rectangle_height = screen.get_height()
-        max = screen.get_width()
+        max = screen.get_width() - rectangle.get_height() - 50
         littleHeight = random.randint(0,screen.get_height() - rectangle.get_width())
         hint = (screen.get_width() - rectangle.get_height() - 50,littleHeight,rectangle.get_height() + 50,rectangle.get_width() + 50)
 
     elif(sideChosen == 1):
-        currentPress = 1
         x = 0
         y = 0
         rectangle_width = screen.get_width()
-        rectangle_height = 0
-        max = screen.get_height()
+        rectangle_height = - rectangle.get_height() - 50
+        max = screen.get_height() - rectangle.get_height() - 50
         littleWidth = random.randint(0,screen.get_width() - rectangle.get_width())
         hint = (littleWidth,screen.get_height() - rectangle.get_height() - 50,rectangle.get_width() + 50,rectangle.get_height() + 50)
     
     elif(sideChosen == 2):
-        currentPress = 2
-        x = screen.get_width()
+        x = screen.get_width() + rectangle.get_height() + 50
         y = 0
         rectangle_width = screen.get_width() + 100
         rectangle_height = screen.get_height()
-        max = 0
+        max = rectangle.get_height() + 50
         littleHeight = random.randint(0,screen.get_height() - rectangle.get_width())
         hint = (0,littleHeight,rectangle.get_height() + 50,rectangle.get_width() + 50)
     
     elif(sideChosen == 3):
-        currentPress = 3
         x = 0
-        y = screen.get_height()
+        y = screen.get_height() + rectangle.get_height() + 50
         rectangle_width = screen.get_width()
         rectangle_height = screen.get_height() + 100
-        max = 0
+        max = rectangle.get_height() + 50
         littleWidth = random.randint(0,screen.get_width() - rectangle.get_width())
         hint = (littleWidth,0,rectangle.get_width() + 50,rectangle.get_height() + 50)
 
@@ -254,37 +250,41 @@ def rectPress(velocity):
         if(sideChosen == 0):
             rectangle_width = rectangle_width + velocity
             velocity = 1.1*(velocity + animation_speed)
-            littleWidth = rectangle_width - rectangle.get_height() - 50
+            littleWidth = rectangle_width
 
         elif(sideChosen == 1):
             rectangle_height = rectangle_height + velocity
             velocity = 1.1*(velocity + animation_speed)
-            littleHeight = rectangle_height - rectangle.get_height() - 50
+            littleHeight = rectangle_height
         
         elif(sideChosen == 2):
             x = x - velocity
             velocity = 1.1*(velocity + animation_speed)
-            littleWidth = x
+            littleWidth = x - rectangle.get_height() - 50
 
         elif(sideChosen == 3):
             y = y - velocity
             velocity = 1.1*(velocity + animation_speed)
-            littleHeight = y
+            littleHeight = y - rectangle.get_height() - 50
         
         if(rectangle_width >= max and sideChosen == 0):
             rectangle_width = max
+            littleWidth = rectangle_width
             finished = True
 
         elif(rectangle_height >= max and sideChosen == 1):
             rectangle_height = max
+            littleHeight = rectangle_height
             finished = True
 
         elif(x <= max and sideChosen == 2):
             x = max
+            littleWidth = x - rectangle.get_height() - 50
             finished = True
 
         elif(y <= max and sideChosen == 3):
             y = max
+            littleHeight = y - rectangle.get_height() - 50
             finished = True
         
         time.sleep(1/100)
@@ -292,59 +292,68 @@ def rectPress(velocity):
         #resize
         rectangleanimation = pygame.Rect((x, y, rectangle_width, rectangle_height))
         if(sideChosen == 0 or sideChosen == 2):
-            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_height() + 50, rectangle.get_width() + 50))
+            littleRectangle1 = pygame.Rect((littleWidth, 0, rectangle.get_height() + 50, littleHeight))
+            littleRectangle2 = pygame.Rect((littleWidth, littleHeight + rectangle.get_width() + 50, rectangle.get_height() + 50, screen.get_height()))
         elif(sideChosen == 1 or sideChosen == 3):
-            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_width() + 50, rectangle.get_height() + 50))
+            littleRectangle1 = pygame.Rect((0, littleHeight, littleWidth, rectangle.get_height() + 50))
+            littleRectangle2 = pygame.Rect((littleWidth + rectangle.get_width() + 50, littleHeight, screen.get_width(), rectangle.get_height() + 50))
     
         clock.tick(fps)
 
+    rectReached = True
     pygame.mixer.Sound.play(shut_sound)
-    time.sleep(0.05)
+    time.sleep(1/(1000 + initVelocity))
     score += 1
+    rectReached = False
 
     while finished:
 
         # Update the width of the rectangle
         if(sideChosen == 0):
             rectangle_width = rectangle_width  - velocity/4
-            littleWidth = rectangle_width - rectangle.get_height() - 50
+            littleWidth = rectangle_width
 
         elif(sideChosen == 1):
             rectangle_height = rectangle_height  - velocity/4
-            littleHeight = rectangle_height - rectangle.get_height() - 50
+            littleHeight = rectangle_height
         
         elif(sideChosen == 2):
             x = x + velocity/4
-            littleWidth = x
+            littleWidth = x - rectangle.get_height() - 50
         
         elif(sideChosen == 3):
             y = y + velocity/4
-            littleHeight = y
+            littleHeight = y - rectangle.get_height() - 50
 
         time.sleep(1/200)
 
         #resize
         rectangleanimation = pygame.Rect((x, y, rectangle_width, rectangle_height))
         if(sideChosen == 0 or sideChosen == 2):
-            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_height() + 50, rectangle.get_width() + 50))
+            littleRectangle1 = pygame.Rect((littleWidth, 0, rectangle.get_height() + 50, littleHeight))
+            littleRectangle2 = pygame.Rect((littleWidth, littleHeight + rectangle.get_width() + 50, rectangle.get_height() + 50, screen.get_height()))
         elif(sideChosen == 1 or sideChosen == 3):
-            littleRectangle = pygame.Rect((littleWidth, littleHeight, rectangle.get_width() + 50, rectangle.get_height() + 50))
+            littleRectangle1 = pygame.Rect((0, littleHeight, littleWidth, rectangle.get_height() + 50))
+            littleRectangle2 = pygame.Rect((littleWidth + rectangle.get_width() + 50, littleHeight, screen.get_width(), rectangle.get_height() + 50))
 
         # Cap the width to the maximum width
-        if(rectangle_width <= 0 and sideChosen == 0):
+        if(rectangle_width <= - rectangle.get_height() - 50 and sideChosen == 0):
             rectangle_width = 0
             finished = False
-        elif(rectangle_height <= 0 and sideChosen == 1):
+        elif(rectangle_height <= - rectangle.get_height() - 50 and sideChosen == 1):
             rectangle_height = 0
             finished = False
-        elif(x >= screen.get_width() and sideChosen == 2):
+        elif(x >= screen.get_width() + rectangle.get_height() + 50 and sideChosen == 2):
             x = screen.get_width()
             finished = False
-        elif(y >= screen.get_height() and sideChosen == 3):
+        elif(y >= screen.get_height() + rectangle.get_height() + 50 and sideChosen == 3):
             y = screen.get_width()
             finished = False
         clock.tick(fps)
     stateChanged = False
+    rectangleanimation = (0,0,0,0)
+    littleRectangle1 = (0,0,0,0)
+    littleRectangle2 = (0,0,0,0)
     
     
 
@@ -556,14 +565,13 @@ class GameScreen:
         breakSound = pygame.mixer.Sound('break.wav')
 
         #shape conversions
-        global rectangles
+        global rectangles,littleRectangle1,littleRectangle2,rectangleanimation
         global triangles
         global circles
         global secret
         global secretmsg
         global gaming
-        global currentPress
-        global circleHint,circleanimation,circleLocation,circlePressing,rectPressing
+        global circleHint,circleanimation,circleLocation,circlePressing
         
         #initial conditionals
         
@@ -573,7 +581,7 @@ class GameScreen:
         global rotatedRightShapes
         global upsideDownShapes
         global currentState
-        global stateChanged
+        global stateChanged,circReached
 
         currentShapePosition = 0
         currentShape = shapes[currentShapePosition][currentState]
@@ -584,6 +592,7 @@ class GameScreen:
         crush.start()
         x,y = mouse
         shap = pygame.Rect((0,0,0,0))
+        currentRotation = shapes
 
         #music
         pygame.mixer_music.play(-1)
@@ -598,10 +607,10 @@ class GameScreen:
                 currentShape = secret
 
             #instantaneous screen
-            if(rectPressing):
-                screen.fill(colour)
-            elif(circlePressing):
+            if(circlePressing):
                 screen.fill((40,43,43))
+            else:
+                screen.fill(colour)
             
             if (x > (screen.get_width() - currentShape.get_width() // 2)):
                 x = screen.get_width() - currentShape.get_width() // 2
@@ -612,29 +621,29 @@ class GameScreen:
             if(y < currentShape.get_height() // 2):
                 y = currentShape.get_height() // 2
 
-            topCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, circleanimation + 5, 5)
-            leftCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, 5,circleanimation + 5)
-            bottomCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] + circleanimation + 5, circleanimation + 5, 5)
-            rightCircle = pygame.Rect(circleLocation[0] + circleanimation + 5, circleLocation[1] - circleanimation - 5, 5,circleanimation + 5)
+            topCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, 2*circleanimation + 10, 5)
+            leftCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, 5,2*circleanimation + 10)
+            bottomCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] + circleanimation + 5, 2*circleanimation + 10, 5)
+            rightCircle = pygame.Rect(circleLocation[0] + circleanimation + 5, circleLocation[1] - circleanimation - 5, 5,2*circleanimation + 10)
 
-            if((shap.colliderect(rectangleanimation) or (shap.colliderect(topCircle) or shap.colliderect(bottomCircle) or shap.colliderect(leftCircle) or shap.colliderect(rightCircle))) and not stateChanged and not secretUnlocked):
-                if(not (littleRectangle[0] + littleRectangle[2] > x > littleRectangle[0] and littleRectangle[1] + littleRectangle[3] > y > littleRectangle[1])):
-                    pygame.mixer.Sound.play(breakSound)
-                    currentState = currentState + 1
-                    stateChanged = True
-                    if(currentState == 3):
-                        currentState = 0
-                        gaming = False
+            if((((shap.colliderect(rectangleanimation) or shap.colliderect(littleRectangle1) or shap.colliderect(littleRectangle2)) or (rectReached and currentShapePosition != 0)) or ((shap.colliderect(topCircle) or shap.colliderect(bottomCircle) or shap.colliderect(leftCircle) or shap.colliderect(rightCircle)) or (circReached and currentShapePosition != 2))) and not stateChanged and not secretUnlocked):
+                pygame.mixer.Sound.play(breakSound)
+                currentState = currentState + 1
+                stateChanged = True
+                if(currentState == 3):
+                    currentState = 0
+                    gaming = False
 
-                        crush.join()
-                        queue.append(LoseScreen.lose_screen())
-                        
-                        gameLoop = False
-                    currentShape = shapes[currentShapePosition]
-                    currentShape = currentShape[currentState] 
+                    crush.join()
+                    queue.append(LoseScreen.lose_screen())
+                    
+                    gameLoop = False
+                currentShape = currentRotation[currentShapePosition]
+                currentShape = currentShape[currentState]
             
             pygame.draw.rect(screen,(40,43,43),rectangleanimation)
-            pygame.draw.rect(screen,colour,littleRectangle)
+            pygame.draw.rect(screen,(40,43,43),littleRectangle1)
+            pygame.draw.rect(screen,(40,43,43),littleRectangle2)
             pygame.draw.rect(screen,(200,194,167),hint)
             pygame.draw.circle(screen,colour,circleLocation,circleanimation)
             pygame.draw.circle(screen,(200,194,167),circleLocation,circleHint)
@@ -656,14 +665,17 @@ class GameScreen:
                     #shape rotaters
                     if(event.key == pygame.K_d):
                         currentShape = rotatedLeftShapes[currentShapePosition]
+                        currentRotation = rotatedLeftShapes
                         currentShape = currentShape[currentState]     
 
                     if(event.key == pygame.K_a):
                         currentShape = rotatedRightShapes[currentShapePosition] 
+                        currentRotation = rotatedRightShapes
                         currentShape = currentShape[currentState]                              
 
                     if(event.key == pygame.K_w):
                         currentShape = upsideDownShapes[currentShapePosition]
+                        currentRotation = upsideDownShapes
                         currentShape = currentShape[currentState]  
 
                     #pause menu
@@ -676,6 +688,7 @@ class GameScreen:
 
                 if(event.type == pygame.KEYUP):
                     currentShape = shapes[currentShapePosition]
+                    currentRotation = shapes
                     currentShape = currentShape[currentState]  
                 
                 if(event.type == pygame.QUIT):
