@@ -1,7 +1,6 @@
 import pygame
 import time
 import os
-import sys
 import random
 import threading
 
@@ -132,7 +131,7 @@ def attacks():
 #-------------------------------------------------Press Animations----------------------------------------------------------#
 def circlePress(velocity):
 
-    time.sleep(1/(10+velocity))
+    time.sleep(1/(5+velocity))
     
     global circleanimation,circle,circleHint,score,fps,circleLocation,stateChanged,circlePressing,circReached,gaming
     circlePressing = True
@@ -164,7 +163,6 @@ def circlePress(velocity):
             radius = (circle.get_width() / 2 + 30)
             finished = True
 
-
         time.sleep(1/100)
 
         circleanimation = radius
@@ -172,8 +170,11 @@ def circlePress(velocity):
         clock.tick(fps)
 
     circReached = True
-    pygame.mixer.Sound.play(looney)
-    time.sleep(0.05)
+
+    if gaming:
+        if not muted:
+            pygame.mixer.Sound.play(looney)
+        time.sleep(0.05)
     score += 1
     circReached = False
 
@@ -189,15 +190,17 @@ def circlePress(velocity):
         circleanimation = radius
 
         clock.tick(fps)
+        
     circleanimation = 0
     circleLocation = (-1000,-1000)
     circlePressing = False
     stateChanged = False
+    circleHint = 0
 
 #rect press [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][]
 def rectPress(velocity):
 
-    time.sleep(1/(10+velocity))
+    time.sleep(1/(5+velocity))
 
     initVelocity = velocity
     initialTime = time.time()
@@ -303,8 +306,11 @@ def rectPress(velocity):
         clock.tick(fps)
 
     rectReached = True
-    pygame.mixer.Sound.play(shut_sound)
-    time.sleep(1/(1000 + initVelocity))
+
+    if gaming:
+        if not muted:
+            pygame.mixer.Sound.play(shut_sound)
+        time.sleep(1/(1000 + initVelocity))
     score += 1
     rectReached = False
 
@@ -352,17 +358,18 @@ def rectPress(velocity):
             y = screen.get_width()
             finished = False
         clock.tick(fps)
+
     stateChanged = False
     rectangleanimation = (0,0,0,0)
     littleRectangle1 = (0,0,0,0)
     littleRectangle2 = (0,0,0,0)
-    
+    hint = (0,0,0,0)
     
 
 #-------------------------------------------LOSE SCREEN---------------------------------------------------#
 class LoseScreen:
     def lose_screen():
-        global score
+        global score,game_over,back_button, retry_button, iretry_button,secretUnlocked,quit_button,iquit_button
         new_high = False
         font = pygame.font.SysFont('Ariel',70)
         highFont = pygame.font.SysFont('Times New Roman',50)
@@ -379,10 +386,6 @@ class LoseScreen:
         highScoreDisplay = font.render('High Score: ' + str(currentHighScore),1,(0,0,0))
         newHSMessage = highFont.render('NEW HIGH SCORE',1,(0,0,0))
 
-        #pause buttons
-        global game_over
-        global back_button, retry_button, iretry_button
-        global secretUnlocked,quit_button,iquit_button
         onLost = True
         pygame.mixer_music.pause()
 
@@ -452,9 +455,8 @@ class LoseScreen:
 class PauseMenu:
     def pause_menu():
 
-        #pause buttons
-        global pause_title
-        global back_button
+        #global variables
+        global pause_title,back_button,volume,muted,unmute,mute,volume_lowX,volume_lowY,secretUnlocked,retry_button,iretry_button,score
         
         paused = True
         cheatInput = ['-','-','-','-','-','-','-','-']
@@ -463,6 +465,7 @@ class PauseMenu:
 
         #initial conditions
         currentQuit = pygame.transform.scale_by(quit_button,1.5)
+        currentRetry = pygame.transform.scale_by(retry_button,1.5)
         printmsg = True
 
         #coords
@@ -471,19 +474,13 @@ class PauseMenu:
 
         #main pause loop
         while paused:
-            global volume
-            global muted
-            global unmute
-            global mute
-            global volume_lowX
-            global volume_lowY
-            global secretUnlocked
 
             #top secret
             cheatStringHalf = ''.join(cheatInput)
             cheatString = cheatStringHalf + cheatStringHalf
             if "bigbooty" in cheatString and printmsg:
-                pygame.mixer.Sound.play(click_sound)
+                if not muted:
+                    pygame.mixer.Sound.play(click_sound)
                 secretUnlocked = True
                 printmsg = False
             
@@ -494,7 +491,8 @@ class PauseMenu:
             screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
             screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
             screen.blit(pause_title,(screen.get_width() // 2 - pause_title.get_width() // 2, screen.get_height() // 4 - pause_title.get_height() // 2))
-            screen.blit(currentQuit,(screen.get_width() // 2 - currentQuit.get_width() // 2, screen.get_height() // 2 - currentQuit.get_height() // 2))
+            screen.blit(currentRetry,(screen.get_width() // 2 - currentRetry.get_width() // 2, screen.get_height() // 2 - currentRetry.get_height() // 2))
+            screen.blit(currentQuit,(screen.get_width() // 2 - currentQuit.get_width() // 2, screen.get_height() // 2 - currentRetry.get_height() // 2 + currentRetry.get_height() + 10))
 
             if(secretUnlocked):
                 screen.blit(secretmsg,(screen.get_width() // 2 - secretmsg.get_width() // 2, 3*screen.get_height() // 5))
@@ -510,7 +508,8 @@ class PauseMenu:
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
-                            pygame.mixer.Sound.play(click_sound)
+                            if not muted:
+                                pygame.mixer.Sound.play(click_sound)
                             if(not muted):
                                 muted = True
                                 volume = mute
@@ -537,21 +536,31 @@ class PauseMenu:
                         cheatInput[inputCount] = event.unicode
                         inputCount = (inputCount + 1) % 8
 
-                if((screen.get_width() // 2 - currentQuit.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentQuit.get_width() // 2) and (screen.get_height() // 2 - currentQuit.get_height() // 2) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
+                if((screen.get_width() // 2 - currentRetry.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentRetry.get_width() // 2) and (screen.get_height() // 2 - currentRetry.get_height() // 2 + currentRetry.get_height() + 10) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2 + currentRetry.get_height() + 10)):
                     currentQuit = pygame.transform.scale_by(iquit_button,1.5)
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
                             pygame.quit()
                 else:
                     currentQuit = pygame.transform.scale_by(quit_button,1.5)
+                
+                if((screen.get_width() // 2 - currentRetry.get_width() // 2) <= mouse[0] <= (screen.get_width() // 2 + currentRetry.get_width() // 2) and (screen.get_height() // 2 - currentRetry.get_height() // 2) <= mouse[1] <= (screen.get_height() // 2 + currentQuit.get_height() // 2)):
+                    currentRetry = pygame.transform.scale_by(iretry_button,1.5)
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            paused = False
+                            score = 0
+                            queue.append(GameScreen.game(mouse))
+                else:
+                    currentRetry = pygame.transform.scale_by(retry_button,1.5)
             clock.tick(fps)
 
 # ------------------------------------------- GAME SCREEN -------------------------------------------------#
 class GameScreen:
 
     def game(mouse):
-        global score,fps
-        global secretUnlocked
+        global score,fps,secretUnlocked,rectangles,littleRectangle1,littleRectangle2,rectangleanimation,triangles,circles,secret,secretmsg,gaming,circleHint,circleanimation,circleLocation,circlePressing
+        global muted,shapes,rotatedLeftShapes,rotatedRightShapes,upsideDownShapes,currentState,stateChanged,circReached
         font = pygame.font.SysFont('Calibri',100)
         scoreColour = (88,82,55)
         scoreDisplay = font.render(str(score),1,scoreColour)
@@ -565,25 +574,8 @@ class GameScreen:
             pygame.mixer_music.load('banquet of booty.wav')
         shapeSwitch = pygame.mixer.Sound('shape switch.wav')
         breakSound = pygame.mixer.Sound('break.wav')
-
-        #shape conversions
-        global rectangles,littleRectangle1,littleRectangle2,rectangleanimation
-        global triangles
-        global circles
-        global secret
-        global secretmsg
-        global gaming
-        global circleHint,circleanimation,circleLocation,circlePressing
         
         #initial conditionals
-        
-        global muted
-        global shapes
-        global rotatedLeftShapes
-        global rotatedRightShapes
-        global upsideDownShapes
-        global currentState
-        global stateChanged,circReached
 
         currentShapePosition = 0
         currentShape = shapes[currentShapePosition][currentState]
@@ -595,6 +587,9 @@ class GameScreen:
         x,y = mouse
         shap = pygame.Rect((0,0,0,0))
         currentRotation = shapes
+        d_down = False
+        a_down = False
+        w_down = False
 
         #music
         pygame.mixer_music.play(-1)
@@ -613,15 +608,6 @@ class GameScreen:
                 screen.fill((40,43,43))
             else:
                 screen.fill(colour)
-            
-            if (x > (screen.get_width() - currentShape.get_width() // 2)):
-                x = screen.get_width() - currentShape.get_width() // 2
-            if(x < (currentShape.get_width() // 2)):
-                x = currentShape.get_width() // 2
-            if(y > (screen.get_height() - currentShape.get_height() // 2)):
-                y = screen.get_height() - currentShape.get_height() // 2
-            if(y < currentShape.get_height() // 2):
-                y = currentShape.get_height() // 2
 
             topCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, 2*circleanimation + 10, 5)
             leftCircle = pygame.Rect(circleLocation[0] - circleanimation - 5, circleLocation[1] - circleanimation - 5, 5,2*circleanimation + 10)
@@ -629,7 +615,8 @@ class GameScreen:
             rightCircle = pygame.Rect(circleLocation[0] + circleanimation + 5, circleLocation[1] - circleanimation - 5, 5,2*circleanimation + 10)
 
             if((((shap.colliderect(rectangleanimation) or shap.colliderect(littleRectangle1) or shap.colliderect(littleRectangle2)) or (rectReached and currentShapePosition != 0)) or ((shap.colliderect(topCircle) or shap.colliderect(bottomCircle) or shap.colliderect(leftCircle) or shap.colliderect(rightCircle)) or (circReached and currentShapePosition != 2))) and not stateChanged and not secretUnlocked):
-                pygame.mixer.Sound.play(breakSound)
+                if not muted:
+                    pygame.mixer.Sound.play(breakSound)
                 currentState = currentState + 1
                 stateChanged = True
                 if(currentState == 3):
@@ -662,45 +649,72 @@ class GameScreen:
                     #shape switch
                     if(event.key == pygame.K_SPACE and not secretUnlocked):
                         currentShapePosition = (currentShapePosition + 1) % 3
-                        pygame.mixer.Sound.play(shapeSwitch)
+                        if not muted:
+                            pygame.mixer.Sound.play(shapeSwitch)
                     
                     #shape rotaters
                     if(event.key == pygame.K_d):
-                        currentShape = rotatedLeftShapes[currentShapePosition]
-                        currentRotation = rotatedLeftShapes
-                        currentShape = currentShape[currentState]     
-
+                        d_down = True
+                
                     if(event.key == pygame.K_a):
-                        currentShape = rotatedRightShapes[currentShapePosition] 
-                        currentRotation = rotatedRightShapes
-                        currentShape = currentShape[currentState]                              
+                        a_down = True                             
 
                     if(event.key == pygame.K_w):
-                        currentShape = upsideDownShapes[currentShapePosition]
-                        currentRotation = upsideDownShapes
-                        currentShape = currentShape[currentState]  
+                        w_down = True 
 
                     #pause menu
                     if(event.key == pygame.K_ESCAPE):
                         gaming = False
                         crush.join()
-                        pygame.mixer.Sound.play(click_sound)
+                        if not muted:
+                            pygame.mixer.Sound.play(click_sound)
                         queue.append(PauseMenu.pause_menu())
                         gameLoop = False
                         
 
                 if(event.type == pygame.KEYUP):
-                    currentShape = shapes[currentShapePosition]
-                    currentRotation = shapes
-                    currentShape = currentShape[currentState]  
+                    if event.key == pygame.K_d:
+                        d_down = False
+                    if event.key == pygame.K_a:
+                        a_down = False
+                    if event.key == pygame.K_w:
+                        w_down = False
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
 
                 x,y = mouse2
+                if (x > (screen.get_width() - currentShape.get_width() // 2)):
+                    x = screen.get_width() - currentShape.get_width() // 2
+                if(x < (currentShape.get_width() // 2)):
+                    x = currentShape.get_width() // 2
+                if(y > (screen.get_height() - currentShape.get_height() // 2)):
+                    y = screen.get_height() - currentShape.get_height() // 2
+                if(y < currentShape.get_height() // 2):
+                    y = currentShape.get_height() // 2
+
                 shap = (x - currentShape.get_width() // 2,y - currentShape.get_height() // 2,currentShape.get_width(),currentShape.get_height())
                 shap = pygame.Rect(shap)
                 scoreDisplay = font.render(str(score),1,scoreColour)
+
+                currentShape = shapes[currentShapePosition]
+                currentRotation = shapes
+                currentShape = currentShape[currentState]
+
+                if d_down:
+                    currentShape = rotatedLeftShapes[currentShapePosition]
+                    currentRotation = rotatedLeftShapes
+                    currentShape = currentShape[currentState]     
+                
+                if a_down:
+                    currentShape = rotatedRightShapes[currentShapePosition] 
+                    currentRotation = rotatedRightShapes
+                    currentShape = currentShape[currentState] 
+                
+                if w_down:
+                    currentShape = upsideDownShapes[currentShapePosition]
+                    currentRotation = upsideDownShapes
+                    currentShape = currentShape[currentState] 
 
             pygame.display.flip()
             clock.tick(fps)
@@ -708,13 +722,6 @@ class GameScreen:
 
 # ------------------------------------------- MAIN MENU -------------------------------------------------#
 class MainMenu():
-
-    global play_button
-    global iplay_button
-    global quit_button
-    global iquit_button
-    global muted
-    global volume
 
     #coordinates
     play_lowX = screen.get_width() // 2 - play_button.get_width() // 2
@@ -724,9 +731,8 @@ class MainMenu():
 
     def main_menu():
 
-        global currentState,stateChanged
-        
-        global secretUnlocked
+        global currentState,stateChanged,secretUnlocked,volume,volume_lowX,volume_lowY,muted,title
+
         secretUnlocked = False
 
         currentState = 0
@@ -741,16 +747,12 @@ class MainMenu():
         pygame.mixer_music.load('bg music.wav')
         pygame.mixer_music.play(-1)
 
+        if muted:
+            pygame.mixer_music.pause()
+
         #main menu loop
         while mainLoop:
-
-            global volume
-            global volume_lowX
-            global volume_lowY
-            global muted
-            global title
-           
-            
+        
             #initialising buttons
             screen.fill(colour)
             screen.blit(title,(screen.get_width() // 2 - title.get_width() // 2, screen.get_height() // 4))
@@ -772,7 +774,8 @@ class MainMenu():
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
-                            pygame.mixer.Sound.play(click_sound)
+                            if not muted:
+                                pygame.mixer.Sound.play(click_sound)
                             if(not muted):
                                 muted = True
                                 pygame.mixer_music.pause()
@@ -787,7 +790,8 @@ class MainMenu():
                     play = iplay_button
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
-                            pygame.mixer.Sound.play(click_sound)
+                            if not muted:
+                                pygame.mixer.Sound.play(click_sound)
                             pygame.mixer_music.unload()
                             queue.append(GameScreen.game(mouse))
                             mainLoop = False
