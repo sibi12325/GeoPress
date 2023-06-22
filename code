@@ -515,7 +515,7 @@ class PauseMenu:
     def pause_menu():
 
         #global variables
-        global pause_title,back_button,volume,muted,unmute,mute,volume_lowX,volume_lowY,secretUnlocked,retry_button,iretry_button,score
+        global pause_title,back_button,volume,muted,unmute,mute,volume_lowX,volume_lowY,secretUnlocked,retry_button,iretry_button,score,currentState
         
         paused = True
         cheatInput = ['-','-','-','-','-','-','-','-']
@@ -554,7 +554,7 @@ class PauseMenu:
             screen.blit(currentQuit,(screen.get_width() // 2 - currentQuit.get_width() // 2, screen.get_height() // 2 - currentRetry.get_height() // 2 + currentRetry.get_height() + 10))
 
             if(secretUnlocked):
-                screen.blit(secretmsg,(screen.get_width() // 2 - secretmsg.get_width() // 2, 3*screen.get_height() // 5))
+                screen.blit(secretmsg,(screen.get_width() // 2 - secretmsg.get_width() // 2, 3*screen.get_height() // 5 + currentQuit.get_height()))
 
             pygame.display.flip()
 
@@ -608,6 +608,7 @@ class PauseMenu:
                         if(event.button == 1):
                             paused = False
                             score = 0
+                            currentState = 0
                             queue.append(GameScreen.game(mouse))
                 else:
                     currentRetry = pygame.transform.scale_by(retry_button,1.5)
@@ -753,7 +754,6 @@ class GameScreen:
 
                 shap = (x - currentShape.get_width() // 2,y - currentShape.get_height() // 2,currentShape.get_width(),currentShape.get_height())
                 shap = pygame.Rect(shap)
-                scoreDisplay = font.render(str(score),1,scoreColour)
 
                 currentShape = shapes[currentShapePosition]
                 currentRotation = shapes
@@ -774,6 +774,7 @@ class GameScreen:
                     currentRotation = upsideDownShapes
                     currentShape = currentShape[currentState] 
 
+            scoreDisplay = font.render(str(score),1,scoreColour)
             pygame.display.flip()
             clock.tick(fps)
             
@@ -789,7 +790,7 @@ class MainMenu():
 
     def main_menu():
 
-        global currentState,stateChanged,secretUnlocked,volume,volume_lowX,volume_lowY,muted,title,question,objective
+        global currentState,stateChanged,secretUnlocked,volume,volume_lowX,volume_lowY,muted,title,question,objective,score
 
         secretUnlocked = False
 
@@ -863,6 +864,7 @@ class MainMenu():
                         if(event.button == 1):
                             if not muted:
                                 pygame.mixer.Sound.play(click_sound)
+                            score = 0
                             pygame.mixer_music.unload()
                             queue.append(GameScreen.game(mouse))
                             mainLoop = False
