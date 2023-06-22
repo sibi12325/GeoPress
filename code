@@ -52,7 +52,14 @@ iquit_button = pygame.image.load('quit button inverted.png').convert_alpha()
 iquit_button = pygame.transform.smoothscale(iquit_button,(quit_button.get_width(),quit_button.get_height()))
 secretmsg = pygame.image.load('cheat_activated.png').convert_alpha()
 secretmsg = pygame.transform.scale(secretmsg,(500,200))
-
+help = pygame.image.load('help.png')
+help = pygame.transform.smoothscale_by(help,1.5)
+question = pygame.image.load('question.png')
+question = pygame.transform.smoothscale(question,(70,70))
+conheading = pygame.image.load('conheading.png')
+conheading = pygame.transform.smoothscale_by(conheading,0.75)
+objective = pygame.image.load('objective.png')
+objective = pygame.transform.smoothscale_by(objective,0.75)
 
 #shape character loading
 os.chdir('shapes')
@@ -128,7 +135,13 @@ def attacks():
             rectPress(velocity)
         velocity = velocity + 0.005
 
-#-------------------------------------------------Press Animations----------------------------------------------------------#
+#-------------------------:------------------------Press Animations----------------------------------------------------------#
+def trianglePress(velocity):
+    time.sleep (1/(5+velocity))
+    initTime = time.time()
+    animation_speed = 0.05
+
+#circ press ()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()())()(()()()()()()()()()()())
 def circlePress(velocity):
 
     time.sleep(1/(5+velocity))
@@ -364,7 +377,53 @@ def rectPress(velocity):
     littleRectangle1 = (0,0,0,0)
     littleRectangle2 = (0,0,0,0)
     hint = (0,0,0,0)
-    
+
+#-------------------------------------------HELP SCREEN---------------------------------------------------#
+class HelpScreen:
+    def help_screen():
+
+        global help,back_button,conheading
+        helping = True
+
+        font = pygame.font.SysFont('Calibri',45,True)
+        wControl = font.render(' W -> flip the shape',1,(0,0,0))
+        aControl = font.render(' A -> Tilt shape to the left',1,(0,0,0))
+        dControl = font.render(' D -> Tilt shape to the right',1,(0,0,0))
+        spaceControl = font.render(' Space -> Change Shape',1,(0,0,0))
+        objText = font.render('Quickly move into the shadow ', 1, (0,0,0))
+        objText2 = font.render('before the crushers hit you', 1, (0,0,0))
+
+        screen.fill((230,230,230))
+        screen.blit(help,(screen.get_width() // 2 - help.get_width() // 2, screen.get_height() // 128))
+        screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
+        screen.blit(conheading,(screen.get_width() // 16,screen.get_height() // 4))
+        screen.blit(objective,(screen.get_width() - objective.get_width() - screen.get_width() // 16,screen.get_height() // 4))
+        screen.blit(objText,(screen.get_width() + 40 - objText.get_width() - screen.get_width() // 16,screen.get_height() // 4 + conheading.get_height() + 10))
+        screen.blit(objText2,(screen.get_width() - objText2.get_width() - screen.get_width() // 16,screen.get_height() // 4 + objText.get_height() + 10 +  conheading.get_height() + 10))
+        screen.blit(wControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + conheading.get_height() + 10))
+        screen.blit(aControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 10 + aControl.get_height() +conheading.get_height() + 10))
+        screen.blit(dControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 20 +dControl.get_height() + aControl.get_height() + conheading.get_height() + 10))
+        screen.blit(spaceControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 30 + spaceControl.get_height() + dControl.get_height() + aControl.get_height() +conheading.get_height() + 10))
+        pygame.display.flip()
+
+        #coords
+        back_lowX = screen.get_width() // 64
+        back_lowY = screen.get_height() // 32
+
+        while helping:
+            for event in pygame.event.get():
+                mouse = pygame.mouse.get_pos()
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+                if(back_lowX <= mouse[0] <= back_lowX + back_button.get_width() and back_lowY <= mouse[1] <= back_lowY + back_button.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            if not muted:
+                                pygame.mixer.Sound.play(click_sound)
+                            queue.append(MainMenu.main_menu())
+                            helping = False
 
 #-------------------------------------------LOSE SCREEN---------------------------------------------------#
 class LoseScreen:
@@ -507,9 +566,8 @@ class PauseMenu:
                 #hovering over volume button
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
-                        if(event.button == 1):
-                            if not muted:
-                                pygame.mixer.Sound.play(click_sound)
+                        if(event.button == 1):      
+                            pygame.mixer.Sound.play(click_sound)
                             if(not muted):
                                 muted = True
                                 volume = mute
@@ -731,7 +789,7 @@ class MainMenu():
 
     def main_menu():
 
-        global currentState,stateChanged,secretUnlocked,volume,volume_lowX,volume_lowY,muted,title
+        global currentState,stateChanged,secretUnlocked,volume,volume_lowX,volume_lowY,muted,title,question,objective
 
         secretUnlocked = False
 
@@ -742,6 +800,10 @@ class MainMenu():
         mainLoop = True
         play = play_button
         quit = quit_button
+
+        #coords
+        question_lowX = screen.get_width() // 64
+        question_lowY = screen.get_height() // 32
 
         #bg music
         pygame.mixer_music.load('bg music.wav')
@@ -760,11 +822,21 @@ class MainMenu():
             screen.blit(quit,(screen.get_width() // 2 - quit.get_width() // 2,screen.get_height() // 2 + 5*play.get_height() // 4))
             screen.fill(colour,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32,70,70))
             screen.blit(volume,(screen.get_width() - screen.get_width() // 16, screen.get_height() // 32))
+            screen.blit(question,(screen.get_width() // 64, screen.get_height() // 32))
             pygame.display.flip()
 
             for event in pygame.event.get():
                 mouse = pygame.mouse.get_pos()
                 pygame.mouse.set_visible(True)
+
+                if(question_lowX <= mouse[0] <= question_lowX + question.get_width() and question_lowY <= mouse[1] <= question_lowY + question.get_height()):
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            if not muted:
+                                pygame.mixer.Sound.play(click_sound)
+                            pygame.mixer_music.unload()
+                            queue.append(HelpScreen.help_screen())
+                            mainLoop = False
 
                 #close condition
                 if(event.type == pygame.QUIT):
@@ -774,8 +846,7 @@ class MainMenu():
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
-                            if not muted:
-                                pygame.mixer.Sound.play(click_sound)
+                            pygame.mixer.Sound.play(click_sound)
                             if(not muted):
                                 muted = True
                                 pygame.mixer_music.pause()
