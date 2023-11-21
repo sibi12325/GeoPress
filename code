@@ -43,6 +43,8 @@ fps = 400
 circlePressing = False
 rectReached = False
 circReached = False
+d_down = False
+a_down = False
 
 #image conversions
 firstTimeText = pygame.image.load('firstTime.png')
@@ -103,7 +105,6 @@ os.chdir('..')
 shapes = [rectangles,triangles,circles]
 rotatedLeftShapes = [[pygame.transform.rotate(rectangles[i], 90) for i in range(3)],[pygame.transform.rotate(triangles[i], 90) for i in range(3)],circles]
 rotatedRightShapes = [rotatedLeftShapes[0],[pygame.transform.rotate(triangles[i], -90) for i in range(3)],circles]
-upsideDownShapes = [rectangles,[pygame.transform.rotate(triangles[i], 180) for i in range(3)],circles]
 
 #more image conversions
 game_over = pygame.image.load('game over.png').convert_alpha()
@@ -129,6 +130,8 @@ colour = (238,232,205)
 score = 0
 pygame.display.set_icon(icon)
 pygame.display.set_caption("GeoPress")
+currentShapePosition = 0
+currentShape = shapes[currentShapePosition][currentState]
 
 triangleDiagonalxInc = 2*screen.get_width() // 3 + 50 - screen.get_width()
 triangleDiagonalyInc = -7*screen.get_height() // 45 - screen.get_height()
@@ -144,7 +147,7 @@ triangle_press_sound = pygame.mixer.Sound('triangle.wav')
 #-----------------------------------------------attacks choosing----------------------------------------------------------#
 def attacks():
     velocity = 0.0025
-    global gaming,fps
+    global gaming,fps,paused
     while gaming:
         chosen = random.randint(0,2)
         if(chosen == 0):
@@ -154,6 +157,10 @@ def attacks():
         if(chosen == 2):
             trianglePress(velocity)
         velocity = velocity + 0.0025
+        while(paused):
+            {
+
+            }
 
 #-------------------------:------------------------Press Animations----------------------------------------------------------#
 #Use mask overlay function in pygame
@@ -210,6 +217,10 @@ def trianglePress(velocity):
 
         rectangleanimation = pygame.Rect((x, y, rectangle_width, rectangle_height))
         clock.tick(fps)
+        while(paused):
+            {
+
+            }
 
     stateChanged = False
     rectangleanimation = (0,0,0,0)
@@ -258,8 +269,17 @@ def circlePress(velocity):
         circleanimation = radius
 
         clock.tick(fps)
+        while(paused):
+            {
+
+            }
 
     circReached = True
+
+    while(paused):
+        {
+
+        }
 
     if gaming:
         if not muted:
@@ -282,6 +302,10 @@ def circlePress(velocity):
         circleanimation = radius
 
         clock.tick(fps)
+        while(paused):
+            {
+
+            }
         
     circleanimation = 0
     circleLocation = (-1000,-1000)
@@ -336,6 +360,11 @@ def rectPress(velocity):
         max = rectangle.get_height() + 50
         littleWidth = random.randint(0,screen.get_width() - rectangle.get_width())
         hint = (littleWidth,0,rectangle.get_width() + 50,rectangle.get_height() + 50)
+
+    while(paused):
+            {
+
+            }
 
     if gaming:
         time.sleep(1/(800*velocity))
@@ -397,6 +426,10 @@ def rectPress(velocity):
             littleRectangle2 = pygame.Rect((littleWidth + rectangle.get_width() + 50, littleHeight, screen.get_width(), rectangle.get_height() + 50))
     
         clock.tick(fps)
+        while(paused):
+            {
+
+            }
 
     rectReached = True
 
@@ -453,6 +486,10 @@ def rectPress(velocity):
             y = screen.get_width()
             finished = False
         clock.tick(fps)
+        while(paused):
+            {
+
+            }
 
     stateChanged = False
     rectangleanimation = (0,0,0,0)
@@ -613,7 +650,7 @@ class PauseMenu:
     def pause_menu():
 
         #global variables
-        global topScore,musicPlaying,pause_title,back_button,volume,muted,unmute,mute,volume_lowX,volume_lowY,secretUnlocked,retry_button,iretry_button,score,currentState,paused
+        global gaming,topScore,musicPlaying,pause_title,back_button,volume,muted,unmute,mute,volume_lowX,volume_lowY,secretUnlocked,retry_button,iretry_button,score,currentState,paused
         
         os.chdir('..')
         currentHighScore = open('data','r')
@@ -704,12 +741,13 @@ class PauseMenu:
 
                 if(event.type == pygame.KEYDOWN):
                     if(event.key == pygame.K_ESCAPE):
-                        paused = False
                         musicPlaying = True
                         if not printmsg:
                             musicPlaying = False
                         if not muted:
                             pygame.mixer_music.unpause()
+                        paused = False
+                        gaming = True
                         queue.append(GameScreen.game(mouse))
                     else:
                         cheatInput[inputCount] = event.unicode
@@ -719,6 +757,9 @@ class PauseMenu:
                     currentQuit = pygame.transform.scale_by(iquit_button,1.5)
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
+                            paused = False
+                            gaming = False
+                            threading.current_thread().join()
                             pygame.quit()
                 else:
                     currentQuit = pygame.transform.scale_by(quit_button,1.5)
@@ -731,6 +772,7 @@ class PauseMenu:
                             score = 0
                             currentState = 0
                             secretUnlocked = False
+                            gaming = False
                             queue.append(GameScreen.game(mouse))
                 else:
                     currentRetry = pygame.transform.scale_by(retry_button,1.5)
@@ -741,7 +783,8 @@ class GameScreen:
 
     def game(mouse):
         global score,paused,fps,secretUnlocked,rectangles,littleRectangle1,littleRectangle2,rectangleanimation,triangles,circles,secret,secretmsg,gaming,circleHint,circleanimation,circleLocation,circlePressing
-        global musicPlaying,muted,shapes,rotatedLeftShapes,rotatedRightShapes,upsideDownShapes,currentState,stateChanged,circReached,triangleDiagonalxInc,triangleDiagonalyInc,triangleDiagonalxDec,triangleDiagonalyDec,triangleDiagonal,trianHints2,trianHints1
+        global musicPlaying,muted,shapes,rotatedLeftShapes,rotatedRightShapes,currentState,stateChanged,circReached,triangleDiagonalxInc,triangleDiagonalyInc,triangleDiagonalxDec,triangleDiagonalyDec,triangleDiagonal,trianHints2,trianHints1
+        global currentShape,currentShapePosition, a_down, d_down
         font = pygame.font.SysFont('Calibri',100)
         scoreColour = (88,82,55)
         scoreDisplay = font.render(str(score),1,scoreColour)
@@ -755,6 +798,20 @@ class GameScreen:
         trianglePressMask3 = pygame.mask.from_surface(triangleDiagonal3)
         trianglePressMask4 = pygame.mask.from_surface(triangleDiagonal4)
 
+        currentShape = shapes[currentShapePosition]
+        currentRotation = shapes
+        currentShape = currentShape[currentState]
+
+        if d_down:
+            currentShape = rotatedLeftShapes[currentShapePosition]
+            currentRotation = rotatedLeftShapes
+            currentShape = currentShape[currentState]     
+        
+        if a_down:
+            currentShape = rotatedRightShapes[currentShapePosition] 
+            currentRotation = rotatedRightShapes
+            currentShape = currentShape[currentState]
+
         pygame.mouse.set_visible(False)
 
         #sounds
@@ -767,20 +824,22 @@ class GameScreen:
         breakSound = pygame.mixer.Sound('break.wav')
         
         #initial conditionals
-
-        currentShapePosition = 0
-        currentShape = shapes[currentShapePosition][currentState]
         printmsg = True
         gameLoop = True
         gaming = True
-        crush = threading.Thread(target=attacks)
-        crush.start()
+        threadLives = False
+        count = 0
+        for thread in threading.enumerate():
+            if(thread.is_alive):
+                count = count + 1
+        if count > 1:
+            threadLives = True
+        if(not threadLives):
+            crush = threading.Thread(target=attacks)
+            crush.start()
         x,y = mouse
         shap = pygame.Rect((0,0,0,0))
         currentRotation = shapes
-        d_down = False
-        a_down = False
-        w_down = False
 
         #music
         if not musicPlaying:
@@ -818,7 +877,7 @@ class GameScreen:
                     currentState = 0
                     gaming = False
                     musicPlaying = False
-                    crush.join()
+                    paused = False
                     queue.append(LoseScreen.lose_screen())
                     
                     gameLoop = False
@@ -860,15 +919,11 @@ class GameScreen:
                     if(event.key == pygame.K_a):
                         a_down = True                             
 
-                    if(event.key == pygame.K_w):
-                        w_down = True 
-
                     #pause menu
                     if(event.key == pygame.K_ESCAPE):
+                        paused = True
                         musicPlaying = False
                         gaming = False
-                        paused = True
-                        crush.join()
                         trianHints1 = ((0,0),(0,0),(0,0))
                         trianHints2 = ((0,0),(0,0),(0,0))
                         if not muted:
@@ -882,8 +937,6 @@ class GameScreen:
                         d_down = False
                     if event.key == pygame.K_a:
                         a_down = False
-                    if event.key == pygame.K_w:
-                        w_down = False
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
@@ -913,11 +966,6 @@ class GameScreen:
                 if a_down:
                     currentShape = rotatedRightShapes[currentShapePosition] 
                     currentRotation = rotatedRightShapes
-                    currentShape = currentShape[currentState] 
-                
-                if w_down:
-                    currentShape = upsideDownShapes[currentShapePosition]
-                    currentRotation = upsideDownShapes
                     currentShape = currentShape[currentState] 
 
             scoreDisplay = font.render(str(score),1,scoreColour)
