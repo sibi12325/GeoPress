@@ -83,6 +83,8 @@ play_button = pygame.image.load('play button.png').convert_alpha()
 play_button = pygame.transform.smoothscale(play_button,(2*play_button.get_width() // 3, 2*play_button.get_height() // 3))
 iplay_button = pygame.image.load('play button inverted.png').convert_alpha()
 iplay_button = pygame.transform.smoothscale(iplay_button,(play_button.get_width(),play_button.get_height()))
+tutorial = pygame.image.load('tutorial.png').convert_alpha()
+itutorial = pygame.image.load('tutorial inverted.png').convert_alpha()
 title = pygame.image.load('title.png').convert_alpha()
 title = pygame.transform.scale_by(title,1.25)
 
@@ -518,7 +520,7 @@ def rectPress(velocity):
 class HelpScreen:
     def help_screen():
 
-        global help,back_button,conheading
+        global help,back_button,conheading,tutorial,itutorial
         helping = True
 
         font = pygame.font.SysFont('Calibri',45,True)
@@ -528,28 +530,44 @@ class HelpScreen:
         objText = font.render('Quickly move into the shadow ', 1, (0,0,0))
         objText2 = font.render('before the crushers hit you', 1, (0,0,0))
 
-        screen.fill((230,230,230))
-        screen.blit(help,(screen.get_width() // 2 - help.get_width() // 2, screen.get_height() // 128))
-        screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
-        screen.blit(conheading,(screen.get_width() // 16,screen.get_height() // 4))
-        screen.blit(objective,(screen.get_width() - objective.get_width() - screen.get_width() // 16,screen.get_height() // 4))
-        screen.blit(objText,(screen.get_width() + 40 - objText.get_width() - screen.get_width() // 16,screen.get_height() // 4 + conheading.get_height() + 10))
-        screen.blit(objText2,(screen.get_width() - objText2.get_width() - screen.get_width() // 16,screen.get_height() // 4 + objText.get_height() + 10 +  conheading.get_height() + 10))
-        screen.blit(aControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + conheading.get_height()))
-        screen.blit(dControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 10 +dControl.get_height() + conheading.get_height()))
-        screen.blit(spaceControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 20 + spaceControl.get_height() + dControl.get_height() + conheading.get_height()))
-        pygame.display.flip()
-
         #coords
         back_lowX = screen.get_width() // 64
         back_lowY = screen.get_height() // 32
+        currentTut = tutorial
+        tutCoords = (screen.get_width() // 2 - currentTut.get_width() // 2, 3*screen.get_height() // 4)
 
         while helping:
+            screen.fill((230,230,230))
+            screen.blit(help,(screen.get_width() // 2 - help.get_width() // 2, screen.get_height() // 128))
+            screen.blit(back_button,(screen.get_width() // 64, screen.get_height() // 32))
+            screen.blit(conheading,(screen.get_width() // 16,screen.get_height() // 4))
+            screen.blit(objective,(screen.get_width() - objective.get_width() - screen.get_width() // 16,screen.get_height() // 4))
+            screen.blit(objText,(screen.get_width() + 40 - objText.get_width() - screen.get_width() // 16,screen.get_height() // 4 + conheading.get_height() + 10))
+            screen.blit(objText2,(screen.get_width() - objText2.get_width() - screen.get_width() // 16,screen.get_height() // 4 + objText.get_height() + 10 +  conheading.get_height() + 10))
+            screen.blit(aControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + conheading.get_height()))
+            screen.blit(dControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 10 +dControl.get_height() + conheading.get_height()))
+            screen.blit(spaceControl,(screen.get_width() // 16 + 20, screen.get_height() // 4 + 20 + spaceControl.get_height() + dControl.get_height() + conheading.get_height()))
+            screen.blit(currentTut,tutCoords)
+
             for event in pygame.event.get():
                 mouse = pygame.mouse.get_pos()
 
+                if(event.type == pygame.KEYDOWN):
+                    if(event.key == pygame.K_ESCAPE):
+                        pygame.quit()
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
+
+                if(tutCoords[0] <= mouse[0] <= (tutCoords[0] + currentTut.get_width()) and tutCoords[1] <= mouse[1] <= tutCoords[1] + currentTut.get_height()):
+                    currentTut = itutorial
+                    if(event.type == pygame.MOUSEBUTTONDOWN):
+                        if(event.button == 1):
+                            pygame.mixer.Sound.play(click_sound)
+                            queue.append(TutorialScreen.tutorial(mouse))
+                            helping = False
+                else:
+                    currentTut = tutorial
 
                 if(back_lowX <= mouse[0] <= back_lowX + back_button.get_width() and back_lowY <= mouse[1] <= back_lowY + back_button.get_height()):
                     if(event.type == pygame.MOUSEBUTTONDOWN):
@@ -558,6 +576,8 @@ class HelpScreen:
                                 pygame.mixer.Sound.play(click_sound)
                             queue.append(MainMenu.main_menu())
                             helping = False
+
+            pygame.display.flip()
 
 #-------------------------------------------LOSE SCREEN---------------------------------------------------#
 class LoseScreen:
@@ -853,7 +873,7 @@ class TutorialScreen:
         tut3 = font.render('Fit the shape into the shadow',1,(0,0,0))
         tut4 = font.render('Press A or D to rotate the shape',1,(0,0,0))
         tut5 = font.render('Survive all three crushers',1,(0,0,0))
-        font2 = pygame.font.SysFont('Ariel',90,True)
+        font2 = pygame.font.SysFont('Calibri',100,True)
         tut6 = font2.render('START',1,(0,0,0))
         tutCount = 0
         tuts = [tut1,tut2,tut3,tut4,tut5,tut6]
@@ -1216,7 +1236,6 @@ class GameScreen:
 
 # ------------------------------------------- MAIN MENU -------------------------------------------------#
 class MainMenu():
-
     #coordinates
     play_lowX = screen.get_width() // 2 - play_button.get_width() // 2
     play_lowY = screen.get_height() // 2
