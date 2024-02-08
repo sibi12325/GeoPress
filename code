@@ -4,6 +4,7 @@ import os
 import random
 import threading
 import base64
+import sys
 
 #UPDATED 2 FIX THE MUSIC GOING QUIETER WHEN A SOUND EFFECT PLAYS
 
@@ -520,7 +521,7 @@ def rectPress(velocity):
 class HelpScreen:
     def help_screen():
 
-        global help,back_button,conheading,tutorial,itutorial
+        global help,back_button,conheading,tutorial,itutorial,score
         helping = True
 
         font = pygame.font.SysFont('Calibri',45,True)
@@ -552,18 +553,16 @@ class HelpScreen:
             for event in pygame.event.get():
                 mouse = pygame.mouse.get_pos()
 
-                if(event.type == pygame.KEYDOWN):
-                    if(event.key == pygame.K_ESCAPE):
-                        pygame.quit()
-
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    sys.exit()
 
                 if(tutCoords[0] <= mouse[0] <= (tutCoords[0] + currentTut.get_width()) and tutCoords[1] <= mouse[1] <= tutCoords[1] + currentTut.get_height()):
                     currentTut = itutorial
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
                             pygame.mixer.Sound.play(click_sound)
+                            score = -1
                             queue.append(TutorialScreen.tutorial(mouse))
                             helping = False
                 else:
@@ -665,6 +664,7 @@ class LoseScreen:
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
                             pygame.quit()
+                            sys.exit()
                 else:
                     currentQuit = pygame.transform.scale_by(quit_button,1.5)
                 
@@ -799,8 +799,8 @@ class PauseMenu:
                         if(event.button == 1):
                             paused = False
                             gaming = False
-                            threading.current_thread().join()
                             pygame.quit()
+                            sys.exit()
                 else:
                     currentQuit = pygame.transform.scale_by(quit_button,1.5)
                 
@@ -944,9 +944,10 @@ class TutorialScreen:
                         if not muted:
                             pygame.mixer.Sound.play(shapeSwitch)
                     
-                    #DELETE THIS----------------
+                    #DELETE THIS------------------------------
                     if(event.key == pygame.K_ESCAPE):
                         pygame.quit()
+                        sys.exit()
                     
                     #shape rotaters
                     if(event.key == pygame.K_d):
@@ -964,6 +965,7 @@ class TutorialScreen:
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
+                    sys.exit()
 
                 x,y = mouse2
                 if (x > (screen.get_width() - currentShape.get_width() // 2)):
@@ -1201,6 +1203,7 @@ class GameScreen:
                 
                 if(event.type == pygame.QUIT):
                     pygame.quit()
+                    sys.exit()
 
                 x,y = mouse2
                 if (x > (screen.get_width() - currentShape.get_width() // 2)):
@@ -1307,6 +1310,7 @@ class MainMenu():
                 #close condition
                 if(event.type == pygame.QUIT):
                     pygame.quit()
+                    sys.exit()
 
                 #hovering over volume button
                 if(volume_lowX <= mouse[0] <= volume_lowX + volume.get_width() and volume_lowY <= mouse[1] <= volume_lowY + volume.get_height()):
@@ -1351,6 +1355,7 @@ class MainMenu():
                     if(event.type == pygame.MOUSEBUTTONDOWN):
                         if(event.button == 1):
                             pygame.quit()
+                            sys.exit()
                 else:
                     quit = quit_button
             clock.tick(fps)
