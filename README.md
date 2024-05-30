@@ -1,5 +1,5 @@
-# GeoPress code
-credit: Sibi Moothedan
+# GeoPress
+#### Credit: Sibi Moothedan
 
 ## HOW TO RUN
 
