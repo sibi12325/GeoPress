@@ -12,9 +12,8 @@
 5. Compile and execute file ``` python3 app/geopress.py ```
 
 ### Windows
-1. Open geopress.py (located in app folder) with Visual Studio Code
-2. Ensure Python extension is installed in vscode
-3. In the terminal, run ``` pip install pygame ```
-4. Press Run or Debug at top right (down arrow next to run code button)
-5. Press Run Python File (NOT RUN CODE)
+1. Ensure Python and pip are installed
+2. In the terminal, run ``` pip install pygame ```
+3. Navigate to the ``` Geopress/app ``` directory (can simply open terminal in the app file)
+4. Type ``` python3 geopress.py ``` in the terminal
 
