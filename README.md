@@ -1,6 +1,5 @@
 # GeoPress
 #### File was too large for GitHub so download from my Google Drive [Here](https://drive.google.com/drive/folders/13yaSCacEWl7d1Ysnn20youvuCjJuzVsG?usp=drive_link)
-#### Credit: Sibi Moothedan
 
 ## HOW TO RUN
 
