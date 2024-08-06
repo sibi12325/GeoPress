@@ -9,7 +9,7 @@
 4. Open terminal in the unzipped folder
 5. In the terminal, run the following commands in order
   1. Download pygame module with (for Windows) ``` pip install pygame ```  (for Debian/Ubuntu Linux)  ``` python3 -m pip install pygame ```
-  2. Run Geopress application with ``` python3 app/geopress.py ```
+  2. Run Geopress application with ``` python3 <location>/GeoPress/app/geopress.py ```
 
 ---
 ## PIP AND PYTHON INSTALLATION
