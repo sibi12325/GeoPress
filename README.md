@@ -22,7 +22,7 @@
 4. Ensure python is installed ``` python3 --version ```
 
 ##### For Windows Systems
-1. Download python from the official python.org site (or click [here](https://www.python.org/ftp/python/3.13.4/python-3.13.4-amd64.exe) for direct link
+1. Download python from the official python.org site (or click here for direct link : [Windows 64-bit](https://www.python.org/ftp/python/3.13.4/python-3.13.4-amd64.exe))
 2. Ensure python was installed by opening terminal and running ``` python --version ```
 
 ### Pip
@@ -34,10 +34,8 @@
 
 ##### For Windows Systems
 1. Open Terminal
-2. Download pip installer with ``` curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py ```
-3. Use pip installer with ``` python get-pip.py ```
-4. Ensure pip was installed with ``` python -m pip help ```
-
+2. Install pip with ``` python -m ensurepip --upgrade ```
+3. Ensure pip was installed with ``` pip --version ```
 ---
 
 
