@@ -22,10 +22,8 @@
 4. Ensure python is installed ``` python3 --version ```
 
 ##### For Windows Systems
-1. Open Microsoft Store
-2. Search for Python
-3. Install Python 3.11
-4. Ensure python was installed by opening terminal and running ``` python3 --version ```
+1. Download python from the official python.org site (or click [here](https://www.python.org/ftp/python/3.13.4/python-3.13.4-amd64.exe) for direct link
+2. Ensure python was installed by opening terminal and running ``` python --version ```
 
 ### Pip
 ##### For (Debian/Ubuntu) Linux Systems
