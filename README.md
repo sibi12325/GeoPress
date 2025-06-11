@@ -11,6 +11,8 @@
   1. Download pygame module with (for Windows) ``` pip install pygame ```  (for Debian/Ubuntu Linux)  ``` python3 -m pip install pygame ```
   2. Run Geopress application with ``` python3 <location>/GeoPress/app/geopress.py ```
 
+### If you need to reset at any time, run wipe.bat
+
 ---
 ## PIP AND PYTHON INSTALLATION
 
